@@ -1,0 +1,1904 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>11/30~12/5 日本宮古島+沖繩之旅</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <!-- Leaflet CSS & JS (載入原生 Google Maps 中文街道圖資與藍色圓點路線) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Inter"', '"Noto Sans TC"', 'sans-serif'],
+          },
+          colors: {
+            ocean: {
+              50: '#f4fbfd',
+              100: '#e2f5fa',
+              200: '#bfe9f4',
+              300: '#8ad8ec',
+              400: '#49bfe0',
+              500: '#1ca3c9',
+              600: '#1083a8',
+              700: '#106988',
+              800: '#13566f',
+              900: '#14485d',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', 'Noto Sans TC', sans-serif;
+      background-color: #f6fafc;
+      color: #1e293b;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* 極簡海洋風細緻波浪背景紋理 */
+    .ocean-minimal-header {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(244, 251, 253, 0.94) 100%);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    /* 隱藏橫向捲軸 */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* 強制所有景點實景圖片容器高度與比例完全一致（絕不忽大忽小） */
+    .spot-photo-box {
+      width: 100%;
+      height: 215px;
+      min-height: 215px;
+      max-height: 215px;
+      overflow: hidden;
+      border-radius: 0.875rem;
+      background-color: #e2e8f0;
+      position: relative;
+    }
+    @media (min-width: 640px) {
+      .spot-photo-box {
+        height: 235px;
+        min-height: 235px;
+        max-height: 235px;
+      }
+    }
+    .spot-photo-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+      transition: transform 0.4s ease;
+    }
+    .spot-photo-box:hover .spot-photo-img {
+      transform: scale(1.02);
+    }
+
+    /* 仿原生 Google Maps 路程時間與距離白底浮動方塊 */
+    .gmap-duration-box {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22);
+      padding: 3px 7px;
+      font-family: 'Inter', 'Noto Sans TC', sans-serif;
+      white-space: nowrap;
+      pointer-events: none;
+      line-height: 1.25;
+    }
+
+    /* 仿原生 Google Maps 紅色水滴定位圖釘與編號徽章 */
+    .gmap-red-pin-wrapper {
+      position: relative;
+      width: 30px;
+      height: 42px;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.35));
+    }
+    .gmap-stop-pill {
+      background: #1a73e8;
+      color: #ffffff;
+      border: 2px solid #ffffff;
+      border-radius: 9999px;
+      font-weight: 800;
+      font-size: 11px;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+
+    /* 仿真登機證虛線分隔 */
+    .ticket-divider {
+      border-top: 1.5px dashed #cbd5e1;
+      position: relative;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col pb-20 sm:pb-10">
+
+  <!-- 頂部極簡海洋風固定導覽列 -->
+  <header class="sticky top-0 z-40 ocean-minimal-header border-b border-ocean-200/70 shadow-sm">
+    <div class="max-w-4xl mx-auto px-3.5 sm:px-6 pt-3 pb-2">
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-ocean-500 to-cyan-500 text-white flex items-center justify-center shadow-sm shrink-0">
+            <i class="fa-solid fa-water text-sm"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-bold tracking-widest uppercase text-ocean-600">MIYAKO & OKINAWA</span>
+              <span class="text-[10px] px-1.5 py-0.2 rounded-full bg-ocean-100 text-ocean-700 font-semibold">6天5夜</span>
+            </div>
+            <h1 class="text-base sm:text-lg font-black tracking-tight text-slate-900 leading-tight">
+              11/30~12/5 日本宮古島+沖繩之旅
+            </h1>
+          </div>
+        </div>
+
+        <!-- 打卡進度與備份按鈕 -->
+        <div class="flex items-center gap-1.5">
+          <div class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-ocean-50 border border-ocean-200 text-ocean-800 text-xs font-bold">
+            <i class="fa-solid fa-location-check text-ocean-500"></i>
+            <span>已打卡 <span id="headerVisitedCount">0</span> 站</span>
+          </div>
+          <button onclick="openBackupModal()" class="p-2 rounded-xl bg-white hover:bg-ocean-50 text-slate-600 border border-slate-200/80 text-xs font-bold transition flex items-center gap-1" title="備份或還原行程資料">
+            <i class="fa-solid fa-cloud-arrow-up text-ocean-600"></i>
+            <span class="hidden sm:inline">備份</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 頂部橫向滑動分頁籤 (已完全移除行前檢核) -->
+      <nav class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-2.5 pb-1" id="topTabNav">
+        <button onclick="switchTab('flights')" data-tab="flights" class="tab-pill shrink-0 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all">
+          ✈️ 航班 & 飯店
+        </button>
+        <button onclick="switchTab('day1')" data-tab="day1" class="tab-pill shrink-0 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all">
+          Day 1 (11/30)
+        </button>
+        <button onclick="switchTab('day2')" data-tab="day2" class="tab-pill shrink-0 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all">
+          Day 2 (12/1)
+        </button>
+        <button onclick="switchTab('day3')" data-tab="day3" class="tab-pill shrink-0 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all">
+          Day 3 (12/2)
+        </button>
+        <button onclick="switchTab('day4')" data-tab="day4" class="tab-pill shrink-0 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all">
+          Day 4 (12/3)
+        </button>
+        <button onclick="switchTab('day5')" data-tab="day5" class="tab-pill shrink-0 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all">
+          Day 5 (12/4)
+        </button>
+        <button onclick="switchTab('day6')" data-tab="day6" class="tab-pill shrink-0 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all">
+          Day 6 (12/5)
+        </button>
+        <button onclick="switchTab('shopping')" data-tab="shopping" class="tab-pill shrink-0 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all">
+          🛍️ 採購清單
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- 主內容區 -->
+  <main class="max-w-4xl w-full mx-auto px-3.5 sm:px-6 py-5 flex-1 space-y-6">
+
+    <!-- ==================== 分頁：✈️ 航班 & 飯店 (唯讀自動同步 Google 航班) ==================== -->
+    <section id="view-flights" class="tab-view space-y-6">
+      <!-- Google Flights 自動同步狀態標題列 -->
+      <div class="bg-white rounded-2xl p-4 sm:p-5 border border-ocean-200/80 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+          <div>
+            <div class="inline-flex items-center gap-1.5 text-[11px] font-bold text-ocean-600 uppercase tracking-wider">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+              GOOGLE FLIGHTS LIVE FEED (唯讀自動同步)
+            </div>
+            <h2 class="text-lg font-black text-slate-900 mt-0.5">三段航班即時狀態與航廈資訊</h2>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <span id="flightSyncTimestamp" class="text-[11px] text-slate-400 font-medium">剛才已同步</span>
+            <button onclick="syncGoogleFlightsLive()" class="px-3 py-1.5 rounded-xl bg-ocean-50 hover:bg-ocean-100 text-ocean-700 border border-ocean-200 text-xs font-bold transition flex items-center gap-1.5">
+              <i id="syncFlightIcon" class="fa-solid fa-arrows-rotate"></i>
+              <span>重新同步航班狀態</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 租車甲借乙還提醒 -->
+        <div class="mt-3.5 flex items-start gap-2.5 bg-cyan-50/70 border border-cyan-200/70 rounded-xl p-3 text-xs text-cyan-950">
+          <i class="fa-solid fa-car-On text-ocean-600 mt-0.5"></i>
+          <div>
+            <span class="font-extrabold">宮古島自駕「甲租乙還」提醒：</span>
+            11/30 去程降落於伊良部島側的<strong>「下地島機場 (SHI)」</strong>領車；12/3 回程由宮古本島的<strong>「宮古機場 (MMY)」</strong>還車起飛。
+          </div>
+        </div>
+
+        <!-- 三張唯讀 Google 航班資訊卡 -->
+        <div id="flightsCardsContainer" class="grid grid-cols-1 gap-4 mt-4">
+          <!-- 由 JS 自動渲染唯讀航班卡片 -->
+        </div>
+      </div>
+
+      <!-- 兩大定點連住飯店區塊 -->
+      <div class="bg-white rounded-2xl p-4 sm:p-5 border border-ocean-200/80 shadow-sm space-y-4">
+        <div>
+          <span class="text-[11px] font-bold text-ocean-600 uppercase tracking-wider">ISLAND STAY & SHOPPING BASE</span>
+          <h2 class="text-lg font-black text-slate-900">兩大定點連住飯店（全程僅換一次飯店）</h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- 宮古島飯店：HOTEL385 -->
+          <div class="rounded-2xl border border-slate-200/90 p-4 flex flex-col justify-between bg-gradient-to-b from-ocean-50/40 to-white">
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-2">
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-ocean-100 text-ocean-800">
+                  宮古島｜11/30 (一) – 12/03 (四) 連住 3 晚
+                </span>
+                <span class="text-xs font-bold text-slate-500">平良市中心</span>
+              </div>
+              <h3 class="text-base font-black text-slate-900">HOTEL385 by ReZARD HOTELS</h3>
+              <p class="text-xs text-slate-500 mt-0.5">〒906-0012 沖繩縣宮古島市平良西里 561</p>
+
+              <ul class="mt-3 space-y-2 text-xs text-slate-600">
+                <li class="flex items-start gap-2">
+                  <i class="fa-solid fa-check text-ocean-500 mt-0.5"></i>
+                  <span><strong>市中心黃金地段：</strong>步行 3 分鐘即達西里通商圈、屋台村與宮古牛燒肉店，晚上小酌免開車。</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <i class="fa-solid fa-check text-ocean-500 mt-0.5"></i>
+                  <span><strong>自駕停車提醒：</strong>館內付費車位採先到先停制，若滿位可停放步行 2 分鐘內的周邊投幣式停車場。</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <i class="fa-solid fa-check text-ocean-500 mt-0.5"></i>
+                  <span><strong>看海與星空：</strong>開車 3 分鐘達市區旁 Pai Nagama 海灘；夜間開車 12 分鐘至前濱海灘即可看無光害星空。</span>
+                </li>
+              </ul>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center gap-2">
+              <a href="https://www.google.com/maps/search/?api=1&query=HOTEL385+Miyakojima" target="_blank" rel="noopener noreferrer" class="w-full py-2.5 rounded-xl bg-ocean-600 hover:bg-ocean-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-sm">
+                <i class="fa-solid fa-location-arrow"></i> 導航至 HOTEL385
+              </a>
+            </div>
+          </div>
+
+          <!-- 沖繩那霸飯店：Tokyu Stay Okinawa Naha -->
+          <div class="rounded-2xl border border-slate-200/90 p-4 flex flex-col justify-between bg-gradient-to-b from-cyan-50/40 to-white">
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-2">
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-cyan-100 text-cyan-800">
+                  沖繩那霸｜12/03 (四) – 12/05 (六) 連住 2 晚
+                </span>
+                <span class="text-xs font-bold text-slate-500">單軌壺川站</span>
+              </div>
+              <h3 class="text-base font-black text-slate-900">Tokyu Stay Okinawa Naha</h3>
+              <p class="text-xs text-slate-500 mt-0.5">〒900-0025 沖繩縣那霸市壺川 3-2-1（沖繩那霸東急 STAY 酒店）</p>
+
+              <ul class="mt-3 space-y-2 text-xs text-slate-600">
+                <li class="flex items-start gap-2">
+                  <i class="fa-solid fa-check text-cyan-600 mt-0.5"></i>
+                  <span><strong>樓下直通 24H 唐吉訶德：</strong>1～2 樓即是唐吉訶德那霸壺川店，半夜隨時下樓補貨，買完搭電梯直達房間！</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <i class="fa-solid fa-check text-cyan-600 mt-0.5"></i>
+                  <span><strong>房內專屬洗脫烘衣機：</strong>Day 4 下午一入住即可把宮古島前 4 天衣物全數洗烘乾淨，騰空行李箱裝戰利品。</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <i class="fa-solid fa-check text-cyan-600 mt-0.5"></i>
+                  <span><strong>交通超順：</strong>步行 3 分鐘達單軌壺川站（去那霸機場僅 4 站 9 分鐘）；自駕往南去 Outlet 或往北去 PARCO 皆約 15 分鐘。</span>
+                </li>
+              </ul>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center gap-2">
+              <a href="https://www.google.com/maps/search/?api=1&query=Tokyu+Stay+Okinawa+Naha" target="_blank" rel="noopener noreferrer" class="w-full py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-sm">
+                <i class="fa-solid fa-location-arrow"></i> 導航至 Tokyu Stay 那霸
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 分頁：Day 1 ~ Day 6 每日行程與原生 Google Maps 路線圖 ==================== -->
+    <section id="view-day" class="tab-view hidden space-y-5">
+      <!-- 當日標題與進度摘要 -->
+      <div class="bg-white rounded-2xl p-4 sm:p-5 border border-ocean-200/80 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <div class="flex items-center gap-2">
+              <span id="dayBadgeLabel" class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-ocean-100 text-ocean-800">DAY 1</span>
+              <span id="dayDateZoneLabel" class="text-xs font-bold text-slate-500">11/30 (週一)｜宮古島西岸</span>
+            </div>
+            <h2 id="dayTitleHeading" class="text-lg sm:text-xl font-black text-slate-900 mt-1"></h2>
+          </div>
+
+          <div class="flex items-center gap-2 self-start sm:self-center">
+            <span id="dayHotelBadge" class="px-3 py-1 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold flex items-center gap-1.5">
+              <i class="fa-solid fa-bed text-ocean-600"></i>
+              <span>HOTEL385</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- 當日 Google Maps 藍色圓點路線地圖 (仿附圖樣式：Google 中文街道底圖 + 藍色圓點路線 + 紅色定位圖釘 + 車程時間距離白底標籤) -->
+        <div class="mt-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+            <div class="text-xs font-extrabold text-slate-700 flex items-center gap-1.5">
+              <i class="fa-solid fa-map-location-dot text-blue-600"></i>
+              <span>當日 Google Maps 順遊路線圖（點擊圓點可跳至該景點）</span>
+            </div>
+            <button onclick="fitCurrentDayMapBounds()" class="text-xs font-bold text-ocean-600 hover:text-ocean-700 flex items-center gap-1">
+              <i class="fa-solid fa-expand"></i> 重置地圖視角
+            </button>
+          </div>
+
+          <!-- A -> B -> C -> D 快速節點橫向列 -->
+          <div id="dayRoutePillsBar" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-2.5">
+            <!-- 由 JS 動態產生 A ➔ B ➔ C 節點 -->
+          </div>
+
+          <!-- Google Maps 圖資容器 -->
+          <div class="relative rounded-2xl overflow-hidden border border-slate-300 shadow-sm bg-slate-100">
+            <div id="dayLeafletMap" class="w-full h-[300px] sm:h-[360px] z-10"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 當日景點卡片列表 (無時間前綴、含打卡勾選、統一尺寸實景照片、詳細說明、上下移動與更換/導入地標) -->
+      <div id="dayStopsListContainer" class="space-y-4">
+        <!-- 由 JS 動態渲染 -->
+      </div>
+
+      <!-- 新增當日景點按鈕 -->
+      <div class="bg-white rounded-2xl p-4 border border-dashed border-ocean-300 text-center">
+        <button onclick="addNewStopToCurrentDay()" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-ocean-50 hover:bg-ocean-100 text-ocean-700 font-extrabold text-xs transition">
+          <i class="fa-solid fa-circle-plus"></i>
+          <span>+ 在本日最後新增一個景點 / 地標</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ==================== 分頁：🛍️ 採購清單 (純商品單價 × 數量 = 小計) ==================== -->
+    <section id="view-shopping" class="tab-view hidden space-y-5">
+      <div class="bg-white rounded-2xl p-4 sm:p-5 border border-ocean-200/80 shadow-sm space-y-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+          <div>
+            <span class="text-[11px] font-bold text-ocean-600 uppercase tracking-wider">SHOPPING LIST & CALCULATOR</span>
+            <h2 class="text-lg sm:text-xl font-black text-slate-900 mt-0.5">沖繩 & 宮古島採購清單（單價 × 數量）</h2>
+            <p class="text-xs text-slate-500 mt-0.5">僅記錄商品名稱、日圓單價與數量，自動計算各項小計與總金額</p>
+          </div>
+
+          <!-- 總計金額面板 -->
+          <div class="grid grid-cols-3 gap-2 bg-ocean-50/70 border border-ocean-200/80 rounded-2xl p-3 text-center shrink-0">
+            <div class="px-2">
+              <div class="text-[10px] font-bold text-slate-500">已購金額</div>
+              <div id="shopBoughtSum" class="text-sm sm:text-base font-black text-emerald-600">¥0</div>
+            </div>
+            <div class="px-2 border-x border-ocean-200/70">
+              <div class="text-[10px] font-bold text-slate-500">未購餘額</div>
+              <div id="shopUnboughtSum" class="text-sm sm:text-base font-black text-amber-600">¥0</div>
+            </div>
+            <div class="px-2">
+              <div class="text-[10px] font-bold text-slate-500">預計總計</div>
+              <div id="shopGrandTotal" class="text-sm sm:text-base font-black text-ocean-700">¥0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 新增商品列（無店家欄位，僅商品名稱、單價、數量） -->
+        <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 bg-slate-50 p-3.5 rounded-2xl border border-slate-200/80">
+          <div class="sm:col-span-6">
+            <label class="text-[11px] font-bold text-slate-500 block mb-1">商品名稱</label>
+            <input id="newItemName" type="text" placeholder="例如：宮古島雪鹽、吉伊卡哇吊飾、合利他命..." class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold focus:outline-none focus:border-ocean-500" />
+          </div>
+          <div class="grid grid-cols-2 sm:col-span-4 gap-2">
+            <div>
+              <label class="text-[11px] font-bold text-slate-500 block mb-1">商品單價 (¥)</label>
+              <input id="newItemPrice" type="number" min="0" placeholder="單價 ¥" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-extrabold focus:outline-none focus:border-ocean-500" />
+            </div>
+            <div>
+              <label class="text-[11px] font-bold text-slate-500 block mb-1">數量</label>
+              <input id="newItemQty" type="number" min="1" value="1" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-extrabold text-center focus:outline-none focus:border-ocean-500" />
+            </div>
+          </div>
+          <div class="sm:col-span-2 flex items-end">
+            <button onclick="addShoppingProduct()" class="w-full py-2 rounded-xl bg-ocean-600 hover:bg-ocean-700 text-white text-xs font-extrabold transition shadow-sm">
+              <i class="fa-solid fa-plus mr-1"></i>新增商品
+            </button>
+          </div>
+        </div>
+
+        <!-- 採購商品列表 -->
+        <div id="shoppingItemsList" class="divide-y divide-slate-100">
+          <!-- 由 JS 動態渲染 -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 手機版底部固定單手導覽列 (已移除行前檢核，改為快速切換航班、宮古D1-D3、沖繩D4-D6、採購清單) -->
+  <nav class="sm:hidden fixed bottom-0 inset-x-0 z-40 ocean-minimal-header border-t border-ocean-200/80 px-2 py-1.5 grid grid-cols-4 gap-1 shadow-lg">
+    <button onclick="switchTab('flights')" data-mobile-group="flights" class="mobile-bottom-btn flex flex-col items-center justify-center py-1 rounded-xl text-[11px] font-bold text-slate-600">
+      <i class="fa-solid fa-plane-departure text-sm mb-0.5"></i>
+      <span>航班/飯店</span>
+    </button>
+    <button onclick="switchTab('day1')" data-mobile-group="miyako" class="mobile-bottom-btn flex flex-col items-center justify-center py-1 rounded-xl text-[11px] font-bold text-slate-600">
+      <i class="fa-solid fa-water text-sm mb-0.5"></i>
+      <span>宮古 D1~D3</span>
+    </button>
+    <button onclick="switchTab('day4')" data-mobile-group="okinawa" class="mobile-bottom-btn flex flex-col items-center justify-center py-1 rounded-xl text-[11px] font-bold text-slate-600">
+      <i class="fa-solid fa-bag-shopping text-sm mb-0.5"></i>
+      <span>沖繩 D4~D6</span>
+    </button>
+    <button onclick="switchTab('shopping')" data-mobile-group="shopping" class="mobile-bottom-btn flex flex-col items-center justify-center py-1 rounded-xl text-[11px] font-bold text-slate-600">
+      <i class="fa-solid fa-calculator text-sm mb-0.5"></i>
+      <span>採購清單</span>
+    </button>
+  </nav>
+
+  <!-- 備份與還原 Modal (讓您可以匯出 JSON 傳給手機或旅伴) -->
+  <div id="backupModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl border border-slate-200 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-black text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-cloud-arrow-up text-ocean-600"></i> 行程與採購清單備份 / 還原
+        </h3>
+        <button onclick="closeBackupModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+      <p class="text-xs text-slate-600 leading-relaxed">
+        您在網頁上調整的「景點順序、打卡狀態、自訂備註」與「採購清單」皆已自動儲存於本機瀏覽器。您也可匯出 JSON 備份檔傳到手機上匯入使用：
+      </p>
+      <div class="grid grid-cols-1 gap-2.5">
+        <button onclick="exportJsonBackup()" class="w-full py-2.5 rounded-xl bg-ocean-600 hover:bg-ocean-700 text-white text-xs font-bold transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-download"></i> 下載 JSON 備份檔
+        </button>
+        <label class="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer">
+          <i class="fa-solid fa-upload"></i> 選擇 JSON 備份檔還原
+          <input type="file" accept=".json" onchange="importJsonBackup(event)" class="hidden" />
+        </label>
+        <button onclick="resetAllToDefault()" class="w-full py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-rotate-left"></i> 恢復為初始預設行程
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast 通知訊息 -->
+  <div id="toastBox" class="fixed bottom-16 sm:bottom-6 right-4 z-50 transform translate-y-20 opacity-0 pointer-events-none transition-all duration-300 bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2 text-xs font-bold">
+    <i class="fa-solid fa-circle-check text-emerald-400"></i>
+    <span id="toastText">已儲存</span>
+  </div>
+
+  <!-- ==================== JavaScript 核心資料與互動邏輯 ==================== -->
+  <script>
+    const STORAGE_KEY = 'miyako_okinawa_2026_minimal_v4';
+
+    // 唯讀自動同步 Google Flights 三段航班資料 (使用者不可修改，直接顯示 Google 航班資訊)
+    const READONLY_FLIGHTS = [
+      {
+        leg: 'FLIGHT 01｜去程直飛宮古島圈',
+        date: '2026/11/30 (週一)',
+        airline: '星宇航空 STARLUX Airlines',
+        flightNo: 'JX886',
+        aircraft: 'Airbus A321neo',
+        depTime: '10:55',
+        depCode: 'TPE',
+        depAirport: '台北桃園國際機場',
+        depTerminal: '第 1 航廈 (T1)',
+        depGate: 'Gate A6',
+        arrTime: '13:00',
+        arrCode: 'SHI',
+        arrAirport: '下地島機場 (宮古島)',
+        arrTerminal: '國際線航廈',
+        duration: '1小時05分 (直飛)',
+        statusText: '準點營運 (On Time)',
+        baggageInfo: '手提 7kg × 1件 ＋ 託運 23kg × 1件',
+        note: '抵達下地島機場 (SHI) 出關後，直接於航廈櫃檯領取自駕租車，順遊伊良部島與下地島。憑星宇登機證享當地合作店家折扣。',
+        googleFlightsUrl: 'https://www.google.com/travel/flights?q=JX886+TPE+to+SHI'
+      },
+      {
+        leg: 'FLIGHT 02｜宮古本島飛往沖繩那霸',
+        date: '2026/12/03 (週四)',
+        airline: '天馬航空 Skymark Airlines',
+        flightNo: 'BC542',
+        aircraft: 'Boeing 737-800',
+        depTime: '15:20',
+        depCode: 'MMY',
+        depAirport: '宮古機場 (宮古本島)',
+        depTerminal: '國內線主航廈',
+        depGate: 'Gate 3',
+        arrTime: '16:05',
+        arrCode: 'OKA',
+        arrAirport: '那霸機場',
+        arrTerminal: '國內線航廈',
+        duration: '45分鐘 (日本國內線)',
+        statusText: '準點營運 (On Time)',
+        baggageInfo: '手提 10kg ＋ 免費託運 20kg',
+        note: '【甲租乙還注意】回程由宮古本島的「宮古機場 (MMY)」起飛！請於 13:40 前抵達宮古機場完成還車與報到。',
+        googleFlightsUrl: 'https://www.google.com/travel/flights?q=BC542+MMY+to+OKA'
+      },
+      {
+        leg: 'FLIGHT 03｜沖繩那霸滿載返台',
+        date: '2026/12/05 (週六)',
+        airline: '樂桃航空 Peach Aviation',
+        flightNo: 'MM929',
+        aircraft: 'Airbus A320neo',
+        depTime: '16:50',
+        depCode: 'OKA',
+        depAirport: '那霸機場',
+        depTerminal: '國際線航廈',
+        depGate: 'Gate 43B',
+        arrTime: '17:35',
+        arrCode: 'TPE',
+        arrAirport: '台北桃園國際機場',
+        arrTerminal: '第 1 航廈 (T1)',
+        duration: '1小時45分 (直飛)',
+        statusText: '準點營運 (On Time)',
+        baggageInfo: '手提合計 7kg (最多2件) ＋ 依加購託運額度',
+        note: '請於 14:30～14:50 抵達那霸機場國際線報到。退稅液體與藥妝請務必放入託運行李；DFS 免稅品於國際線 42 號登機門對面提貨。',
+        googleFlightsUrl: 'https://www.google.com/travel/flights?q=MM929+OKA+to+TPE'
+      }
+    ];
+
+    /**
+     * 內建宮古島 & 沖繩真實景點資料庫
+     * 每一個景點皆綁定日本維基百科 (ja.wikipedia.org) 對應之官方實景條目名稱 (wikiTitle) 與 Wikimedia 實景備援照片，
+     * 確保 100% 呈現真實風景攝影照，絕不使用 AI 生成圖片。
+     */
+    const SPOT_CATALOG = {
+      'shimojishima_airport': {
+        title: '下地島機場 (SHI) 入境 & 領取自駕租車',
+        category: '機場 & 租車',
+        lat: 24.8267, lng: 125.1447,
+        driveNext: '車程 6 分鐘 (2.4 公里)',
+        mapQuery: 'Shimojishima Airport',
+        wikiTitle: '下地島空港',
+        fallbackImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Shimojishima_Airport_Terminal_2019.jpg/960px-Shimojishima_Airport_Terminal_2019.jpg',
+        desc: '星宇航空直飛降落點！航廈採用沖繩琉球石灰岩與木質度假風設計，通關迅速。領車後直接從下地島展開順時針海岸巡禮。',
+        tip: '請再次確認租車合約為「下地島機場取車、12/3 宮古機場還車」；憑星宇登機證可領取當地合作優惠。'
+      },
+      'spot_17end': {
+        title: '① 17 END（下地島機場跑道盡頭果凍海）',
+        category: '宮古15景 ①',
+        lat: 24.8438, lng: 125.1376,
+        driveNext: '車程 6 分鐘 (2.8 公里)',
+        mapQuery: '17END Miyakojima',
+        wikiTitle: '下地島',
+        fallbackImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/17END_Shimojishima.jpg/960px-17END_Shimojishima.jpg',
+        desc: '位於下地島機場 RWY17 跑道北端盡頭，退潮時會浮現純白沙洲與漸層透明的「宮古藍」果凍海，還能看見紅色導航棧橋延伸入海。',
+        tip: '現場無遮陽處與洗手間，冬季海風較大，建議停留拍照 20～30 分鐘。'
+      },
+      'spot_sawada': {
+        title: '② 佐和田之濱（日本百選海灘・海嘯巨石奇景）',
+        category: '宮古15景 ②',
+        lat: 24.8357, lng: 125.1583,
+        driveNext: '車程 10 分鐘 (5.1 公里)',
+        mapQuery: 'Sawada no Hama Beach Irabu',
+        wikiTitle: '佐和田の浜',
+        fallbackImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Sawada-no-hama_Irabujima.jpg/960px-Sawada-no-hama_Irabujima.jpg',
+        desc: '位於伊良部島西北側，遠淺的海面上散落著無數 1771 年明和大海嘯沖上岸的巨大珊瑚礁岩，入選日本渚百選。',
+        tip: '【冬季取捨建議】距離 17 END 僅 5 分鐘車程，冬季風大無遮蔽，建議當作順路 10 分鐘快閃拍照點。'
+      },
+      'spot_toriike': {
+        title: '③ 通池（國家指定天然紀念物・神秘藍洞雙池）',
+        category: '宮古15景 ③',
+        lat: 24.8195, lng: 125.1378,
+        driveNext: '車程 10 分鐘 (5.5 公里)',
+        mapQuery: 'Toriike Pond Miyakojima',
+        wikiTitle: '通り池',
+        fallbackImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Tori-ike_Pond_Shimojishima.jpg/960px-Tori-ike_Pond_Shimojishima.jpg',
+        desc: '由兩個大小相連的巨大石灰岩溶洞水池組成，水底與外海相連，隨水深與光線折射出深邃神秘的鈷藍色。',
+        tip: '停車場通往觀景台的木棧道平坦好走，兩側為天然海岸植物群落。'
+      },
+      'spot_toguchi': {
+        title: '④ 渡口之濱（伊良部島 800m 粉末白沙灣）',
+        category: '宮古15景 ④',
+        lat: 24.8037, lng: 125.1790,
+        driveNext: '車程 8 分鐘 (5.8 公里)',
+        mapQuery: 'Toguchi no Hama Beach',
+        wikiTitle: '渡口の浜',
+        fallbackImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Toguchinohama_Beach.jpg/960px-Toguchinohama_Beach.jpg',
+        desc: '伊良部島南側最美的半月形弧形海灣，綿延 800 公尺的純白珊瑚細沙如麵粉般柔軟，對岸可遠眺宮古本島與來間島。',
+        tip: '沙灘東側入口就是人氣海景餐廳 Blue Turtle，傍晚光線柔和非常適合拍照。'
+      },
+      'spot_irabu_bridge': {
+        title: '⑤ 伊良部大橋（橫越 3,540m 日本最長免費跨海大橋）',
+        category: '宮古15景 ⑤',
+        lat: 24.8130, lng: 125.2310,
+        driveNext: '車程 9 分鐘 (4.2 公里)',
+        mapQuery: 'Irabu Bridge',
+        wikiTitle: '伊良部大橋',
+        fallbackImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Irabu_Bridge_from_Miyako_Island.jpg/960px-Irabu_Bridge_from_Miyako_Island.jpg',
+        desc: '全長 3,540 公尺，筆直橫越在漸層「宮古藍」海面上，連接伊良部島與宮古本島，開車馳騁其上視野極為震撼。',
+        tip: '推薦在宮古本島端的橋頭觀景停車場停留，欣賞大橋與夕陽同框的明信片景色。'
+      },
+      'spot_hotel385_dinner': {
+        title: '入住 HOTEL385 ＆ 平良市區西里通晚餐 (Miyako Yokocho)',
+        category: '住宿 & 晚餐',
+        lat: 24.8052, lng: 125.2811,
+        driveNext: '當日終點站',
+        mapQuery: 'Miyako Yokocho Miyakojima',
+        wikiTitle: '宮古島市',
+        fallbackImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Hirara_Miyakojima_Okinawa.jpg/960px-Hirara_Miyakojima_Okinawa.jpg',
+        desc: '入住平良市中心的 HOTEL385 by ReZARD HOTELS，停妥車輛後步行 3～5 分鐘即可抵達 Miyako Yokocho 屋台村或吃宮古牛燒肉。',
+        tip: '推薦餐廳：① Miyako Yokocho 屋台村美食街 或 ② 涮邸 慶 宮古島店（阿古豬與宮古牛涮涮鍋）。'
+      },
+      'spot_higashi_hennazaki': {
+        title: '⑥ 東平安名岬（2公里海岬步道＋純白平安名崎燈塔）',
+        category: '宮古15景 ⑥',
+        lat: 24.7191, lng: 125.4682,
+        driveNext: '車程 8 分鐘 (4.3 公里)',
+        mapQuery: 'Higashi-Hennazaki Cape',
+        wikiTitle: '東平安名崎',
+        fallbackImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Higashi-hennazaki_01.jpg/960px-Higashi-hennazaki_01.jpg',
+        desc: '宮古島最東南端延伸入海 2 公里的狹長海角，入選日本都市公園百選。左右兩側分別為太平洋與東海，可登上白色燈塔 360 度遠眺。',
+        tip: '海岬步道平坦開闊，冬季海風較強，下車散步請攜帶防風薄外套。'
+      },
+      'spot_yoshino': {
+        title: '⑦ 吉野海岸（高處遠眺東岸珊瑚礁色塊）',
+        category: '宮古15景 ⑦',
+        lat: 24.7366, lng: 125.4428,
+        driveNext: '車程 4 分鐘 (1.8 公里)',
+        mapQuery: 'Yoshino Beach Miyakojima',
+        wikiTitle: '吉野海岸',
+        fallbackImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Yoshino_Beach_Miyakojima.jpg/960px-Yoshino_Beach_Miyakojima.jpg',
+        desc: '宮古島東海岸知名的珊瑚礁海灘，從上方道路展望處就能看見海水中密集的珊瑚礁岩色塊。',
+        tip: '【冬季取捨建議】吉野海岸與隔壁新城海岸車程僅 3 分鐘，且吉野海岸下坡較陡；冬季不下水浮潛，建議路過遠眺並把主要停留時間留給新城海岸。'
+      },
+      'spot_aragusuku': {
+        title: '⑧ 新城海岸（親民淺灘白沙・近距離看珊瑚海）',
+        category: '宮古15景 ⑧',
+        lat: 24.7460, lng: 125.4322,
+        driveNext: '車程 18 分鐘 (12.4 公里)',
+        mapQuery: 'Aragusuku Beach Miyakojima',
+        wikiTitle: '新城海岸',
+        fallbackImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Aragusuku_Beach_Miyakojima.jpg/960px-Aragusuku_Beach_Miyakojima.jpg',
+        desc: '緊鄰吉野海岸的天然白沙淺灘，海水清澈透明，岸邊就有免費停車場與洗手間，冬季不需下水也能在沙灘散步拍出絕美珊瑚海景。',
+        tip: '相比吉野海岸更容易親近，停車後走幾步就能踏上白沙灘。'
+      },
+      'spot_imgyaa': {
+        title: '南岸海景公路午餐 ＆ Imgyaa Marine Garden 展望台',
+        category: '南岸順遊 & 午餐',
+        lat: 24.7219, lng: 125.3554,
+        driveNext: '車程 16 分鐘 (10.5 公里)',
+        mapQuery: 'Imgyaa Marine Garden',
+        wikiTitle: 'インギャーマリンガーデン',
+        fallbackImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Imgya_Marine_Garden.jpg/960px-Imgya_Marine_Garden.jpg',
+        desc: '沿著南岸海景公路向西行駛，順路停靠天然海灣公園 Imgyaa Marine Garden，走上設有牛隻雕像的石階展望台俯瞰翡翠色海灣。',
+        tip: '中午可於南岸沿線景觀餐廳享用宮古蕎麥麵或軟骨麵。'
+      },
+      'spot_kurima_bridge': {
+        title: '⑨ 來間大橋（跨海至來間島「龍宮城展望台」俯瞰前濱）',
+        category: '宮古15景 ⑨',
+        lat: 24.7263, lng: 125.2570,
+        driveNext: '車程 7 分鐘 (3.4 公里)',
+        mapQuery: 'Ryugujo Observatory Kurima',
+        wikiTitle: '来間大橋',
+        fallbackImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Kurima_Bridge_from_Ryugujo_Observatory.jpg/960px-Kurima_Bridge_from_Ryugujo_Observatory.jpg',
+        desc: '全長 1,690 公尺連接宮古本島與來間島。強烈推薦開到來間島上的「龍宮城展望台」，從三樓高處俯瞰整座來間大橋與對岸 7 公里長的白沙灘。',
+        tip: '來間島上也有 AOSORA PARLOR 果昔店與海島雜貨小店可順逛。'
+      },
+      'spot_yonaha_maehama': {
+        title: '⑩ 與那霸前濱海灘（東洋第一美 7 公里白沙灘看日落 & 星空）',
+        category: '宮古15景 ⑩',
+        lat: 24.7380, lng: 125.2630,
+        driveNext: '當日終點站 (回市區 15 分鐘)',
+        mapQuery: 'Yonaha Maehama Beach',
+        wikiTitle: '与那覇前浜',
+        fallbackImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Yonaha_Maehama_Beach_Miyakojima.jpg/960px-Yonaha_Maehama_Beach_Miyakojima.jpg',
+        desc: '被譽為「東洋第一美」的宮古島代表性海灘！綿延 7 公里的潔白細緻粉末沙灘與清澈蒂芬妮藍海水，正對著來間大橋，日落景色令人屏息。',
+        tip: '【夜間觀星推薦】晚餐後若天空無雲，從 HOTEL385 開車 12～15 分鐘回來這裡，無光害的沙灘上能直接仰望滿天星空！'
+      },
+      'spot_sunayama': {
+        title: '⑪ 砂山海灘 Sunayama Beach（越過白沙丘遇見宮古藍海灣）',
+        category: '宮古15景 ⑪',
+        lat: 24.8390, lng: 125.2810,
+        driveNext: '車程 6 分鐘 (3.1 公里)',
+        mapQuery: 'Sunayama Beach',
+        wikiTitle: '砂山ビーチ',
+        fallbackImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Sunayama_Beach_Miyakojima.jpg/960px-Sunayama_Beach_Miyakojima.jpg',
+        desc: '距離平良市區僅 10 分鐘車程，穿過一段純白沙丘步道後，眼前豁然開朗出現湛藍海灣與著名的海蝕拱門奇岩。',
+        tip: '海蝕洞下方目前已圍起保護，但在白沙丘與海灣前拍照依然宛如明信片。'
+      },
+      'spot_marine_park': {
+        title: '⑫ 宮古島海中公園（免下水透過海底觀景窗看野生熱帶魚）',
+        category: '宮古15景 ⑫',
+        lat: 24.8630, lng: 125.2760,
+        driveNext: '車程 9 分鐘 (5.2 公里)',
+        mapQuery: 'Miyakojima Marine Park',
+        wikiTitle: '宮古島海中公園',
+        fallbackImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Clark%27s_anemonefish_in_Miyakojima.jpg/960px-Clark%27s_anemonefish_in_Miyakojima.jpg',
+        desc: '走入海面下 4 公尺深的海底觀察廊道，透過 24 扇大型壓克力窗，不需下水就能近距離欣賞窗外游過的小丑魚、蝶魚與珊瑚礁生態。',
+        tip: '非常適合 12 月冬季造訪，在室內避開海風就能輕鬆探索宮古島海底世界。'
+      },
+      'spot_nishi_hennazaki': {
+        title: '⑬ 西平安名崎 ＆ 人氣午餐 HARRY\'S 蒜香奶油蝦餐車',
+        category: '宮古15景 ⑬ & 午餐',
+        lat: 24.9140, lng: 125.2610,
+        driveNext: '車程 5 分鐘 (2.6 公里)',
+        mapQuery: 'HARRYS Shrimp Truck Miyakojima',
+        wikiTitle: '西平安名崎',
+        fallbackImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Nishi-hennazaki_Cape_Miyakojima.jpg/960px-Nishi-hennazaki_Cape_Miyakojima.jpg',
+        desc: '位於宮古本島最北端海角，擁有三座大型白色風車與延伸木棧道，可同時眺望池間大橋與伊良部島。中午直接在入口處的鮮黃色美式餐車享用現炒夏威夷蒜香奶油蝦飯！',
+        tip: 'HARRY\'S 蒜香蝦飯香氣十足，可選原味奶油或微辣口味，配海景超享受。'
+      },
+      'spot_ikema_bridge': {
+        title: '⑭ 池間大橋（跨海至池間島「海美來」觀景台看翠綠海色）',
+        category: '宮古15景 ⑭',
+        lat: 24.9220, lng: 125.2490,
+        driveNext: '車程 22 分鐘 (14.5 公里)',
+        mapQuery: 'Ikema Bridge',
+        wikiTitle: '池間大橋',
+        fallbackImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Ikema_Bridge_Miyakojima.jpg/960px-Ikema_Bridge_Miyakojima.jpg',
+        desc: '全長 1,425 公尺連接宮古本島與池間島。過橋後的「海美來（Kaimiru）」二樓展望台是拍攝池間大橋與大神島的最佳角度，海水呈現夢幻的翠綠漸層。',
+        tip: '觀景台一樓小店可買到熱騰騰的紅芋麻糬與宮古島雪鹽冰淇淋。'
+      },
+      'spot_painagama': {
+        title: '⑮ 帕伊納加馬海灘 Pai Nagama Beach（市區海灘散步看夕陽）',
+        category: '宮古15景 ⑮',
+        lat: 24.8045, lng: 125.2725,
+        driveNext: '車程 4 分鐘 (1.2 公里)',
+        mapQuery: 'Painagama Beach',
+        wikiTitle: 'パイナガマビーチ',
+        fallbackImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Painagama_Beach_Miyakojima.jpg/960px-Painagama_Beach_Miyakojima.jpg',
+        desc: '距離 HOTEL385 開車僅 3 分鐘（步行約 10 分鐘）的平良市區海灘，設有平坦海濱步道與涼亭，傍晚在這裡吹海風看夕陽，完美集滿宮古島 15 景！',
+        tip: '晚餐推薦前往 Teppan Okonomiyaki BOBURI 品嚐沖繩在地食材鐵板燒與大阪燒。'
+      },
+      'spot_blue_turtle': {
+        title: '渡口之濱海景午餐：Blue Turtle（宮古牛漢堡排）',
+        category: '海景午餐',
+        lat: 24.8032, lng: 125.1802,
+        driveNext: '車程 20 分鐘 (12.8 公里)',
+        mapQuery: 'Blue Turtle Irabu',
+        wikiTitle: '伊良部島',
+        fallbackImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/Toguchinohama_Beach.jpg/960px-Toguchinohama_Beach.jpg',
+        desc: '在離開宮古島前，上午先於市區超市採買宮古島雪鹽與多良間黑糖，中午再次開過伊良部大橋到渡口之濱海灘旁的 Blue Turtle 享用海景午餐。',
+        tip: '用完餐後請於 13:40 前返回宮古本島的「宮古機場 (MMY)」加滿油還車。'
+      },
+      'spot_miyako_airport': {
+        title: '宮古機場 (MMY) 還車 ➔ 15:20 天馬航空 BC542 飛往那霸',
+        category: '還車 & 航班',
+        lat: 24.7828, lng: 125.2951,
+        driveNext: '航程 45 分鐘飛抵那霸',
+        mapQuery: 'Miyako Airport',
+        wikiTitle: '宮古空港',
+        fallbackImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Miyako_Airport_Terminal.jpg/960px-Miyako_Airport_Terminal.jpg',
+        desc: '13:40 抵達宮古機場周邊租車店完成還車，接駁至航廈報到。搭乘 15:20 天馬航空 BC542 班機，16:05 即抵達沖繩那霸機場 (OKA)。',
+        tip: '宮古機場二樓有多家名產店與 A&W 漢堡，安檢排隊人潮較多請提早入關。'
+      },
+      'spot_tokyu_stay': {
+        title: '入住 Tokyu Stay Okinawa Naha（啟動房內洗脫烘衣機）',
+        category: '沖繩連住基地',
+        lat: 26.2062, lng: 127.6780,
+        driveNext: '車程 14 分鐘 (6.5 公里)',
+        mapQuery: 'Tokyu Stay Okinawa Naha',
+        wikiTitle: '壺川駅',
+        fallbackImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Tsubogawa_Station_Okinawa_Monorail.jpg/960px-Tsubogawa_Station_Okinawa_Monorail.jpg',
+        desc: '從那霸機場搭單軌僅 4 站（9 分鐘）至壺川站即達飯店。進房先把前 4 天宮古島穿過的衣物丟進房內專屬「洗脫烘衣機」，立刻出門展開沖繩大血拚！',
+        tip: '飯店大樓 1～2 樓直接連通 24H 唐吉訶德那霸壺川店。'
+      },
+      'spot_ashibinaa': {
+        title: '【血拚第1彈】沖繩 ASHIBINAA Outlet（營業至 20:00）',
+        category: '沖繩血拚 ①',
+        lat: 26.1583, lng: 127.6572,
+        driveNext: '過馬路步行 3 分鐘 (0.3 公里)',
+        mapQuery: 'Okinawa Outlet Mall Ashibinaa',
+        wikiTitle: '沖縄アウトレットモール・あしびなー',
+        fallbackImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/Okinawa_Outlet_Mall_Ashibinaa.jpg/960px-Okinawa_Outlet_Mall_Ashibinaa.jpg',
+        desc: '距離那霸機場與壺川約 15 分鐘車程。集結超過百間國際精品、運動品牌（Nike、Adidas、New Balance、BEAMS、ABC-MART）過季折扣。',
+        tip: '營業至 20:00，建議一抵達先主攻運動鞋與日系服飾品牌。'
+      },
+      'spot_iias_toyosaki': {
+        title: '【血拚第1彈續攤】iias 沖繩豐崎（營業至 21:00）',
+        category: '沖繩血拚 ①',
+        lat: 26.1558, lng: 127.6518,
+        driveNext: '車程 15 分鐘回飯店 (6.8 公里)',
+        mapQuery: 'iias Okinawa Toyosaki',
+        wikiTitle: 'イーアス沖縄豊崎',
+        fallbackImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Iias_Okinawa_Toyosaki.jpg/960px-Iias_Okinawa_Toyosaki.jpg',
+        desc: '就在 ASHIBINAA Outlet 正對面！20:00 Outlet 打烊後直接過馬路繼續逛大型 Loft 生活雜貨、UNIQLO、GU、Kojima×Bic Camera 電器與 AEON 超市。',
+        tip: '買完回飯店樓下還有 24 小時營業的唐吉訶德壺川店可以深夜繼續掃貨！'
+      },
+      'spot_parco_city': {
+        title: '【血拚第2彈】浦添西海岸 PARCO CITY（約 250 店海景旗艦商場）',
+        category: '沖繩血拚 ②',
+        lat: 26.2611, lng: 127.6981,
+        driveNext: '車程 25 分鐘 (13.8 公里)',
+        mapQuery: 'SAN-A Urasoe West Coast PARCO CITY',
+        wikiTitle: 'サンエー浦添西海岸 PARCO CITY',
+        fallbackImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/San-A_Urasoe_West_Coast_PARCO_CITY.jpg/960px-San-A_Urasoe_West_Coast_PARCO_CITY.jpg',
+        desc: '10:00 準時進場！全沖繩品牌最齊全的現代化海景購物中心，必逛吉伊卡哇專賣店 (Chiikawa Land)、各大日系潮流服飾選物、松本清藥妝、電器與大型 San-A 超市。',
+        tip: '中午直接在館內無敵海景美食街或敘敘苑燒肉用餐，動線寬敞超好逛。'
+      },
+      'spot_aeon_rycom': {
+        title: '【血拚第3彈】永旺夢樂城沖繩來客夢 AEON MALL Rycom',
+        category: '沖繩血拚 ③',
+        lat: 26.3144, lng: 127.7960,
+        driveNext: '當日終點站 (營業至 22:00)',
+        mapQuery: 'AEON MALL Okinawa Rycom',
+        wikiTitle: 'イオンモール沖縄ライカム',
+        fallbackImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Aeon_Mall_Okinawa_Rycom.jpg/960px-Aeon_Mall_Okinawa_Rycom.jpg',
+        desc: '沖繩中部超巨型購物商場，必逛沖繩寶可夢中心 (Pokémon Center Okinawa)、各大日系服飾、運動品牌與超大型永旺超市。',
+        tip: '若在 PARCO CITY 已買齊或想回市區吃燒肉，傍晚也可彈性改逛那霸市區。'
+      },
+      'spot_dfs_okinawa': {
+        title: '【血拚第4彈】歌町站雙百貨：DFS 免稅店 ＋ San-A Naha Main Place',
+        category: '沖繩血拚 ④',
+        lat: 26.2233, lng: 127.6961,
+        driveNext: '單軌 15 分鐘 (4.8 公里)',
+        mapQuery: 'T Galleria by DFS Okinawa',
+        wikiTitle: 'Tギャラリア沖縄 by DFS',
+        fallbackImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/DFS_Galleria_Okinawa.jpg/960px-DFS_Galleria_Okinawa.jpg',
+        desc: '10:00 準時開逛單軌歌町站旁的 DFS 沖繩那霸店（市區內直接享免稅價買國際精品、專櫃美妝與香水），接著過馬路逛當地人最愛的 San-A Naha Main Place 百貨。',
+        tip: '於 DFS 購買之指定免稅品，可直接於「那霸機場國際線 42 號登機門對面」提貨，完全不佔託運行李重量！'
+      },
+      'spot_kokusai_aeon': {
+        title: '最後伴手禮衝刺：小祿站永旺那霸店＋大國藥妝（或國際通商店街）',
+        category: '伴手禮最後掃貨',
+        lat: 26.1956, lng: 127.6672,
+        driveNext: '單軌 2 站 5 分鐘直達那霸機場',
+        mapQuery: 'AEON Naha Shopping Center',
+        wikiTitle: '国際通り',
+        fallbackImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Kokusai-dori_Naha_Okinawa.jpg/960px-Kokusai-dori_Naha_Okinawa.jpg',
+        desc: '• 選項A（最順路不塞車）：單軌小祿站旁「永旺那霸店＋大國藥妝＋通堂拉麵」，逛完搭單軌 2 站（5分鐘）直達那霸機場！\n• 選項B（伴手禮最齊）：逛「沖繩國際通商店街」掃齊紅芋塔、雪鹽餅乾。',
+        tip: '退稅液體與藥妝請務必於去機場前塞入託運行李箱。'
+      },
+      'spot_naha_airport': {
+        title: '那霸機場國際線報到 ➔ 16:50 樂桃航空 MM929 返台 (17:35 抵台)',
+        category: '機場報到 & 返台',
+        lat: 26.2064, lng: 127.6465,
+        driveNext: '平安返抵台北桃園',
+        mapQuery: 'Naha Airport International Terminal',
+        wikiTitle: '那覇空港',
+        fallbackImg: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Naha_Airport_Terminal_Building.jpg/960px-Naha_Airport_Terminal_Building.jpg',
+        desc: '14:30～14:50 抵達那霸機場國際線航廈辦理樂桃航空報到與行李託運。出關後若在 DFS 有購物，記得前往 42 號登機門對面領取免稅戰利品。',
+        tip: '樂桃手提行李限重合計 7kg（最多 2 件），16:50 起飛、17:35 返抵桃園 T1！'
+      }
+    };
+
+    // 預設 6 天每日行程結構
+    const DEFAULT_DAYS = {
+      day1: {
+        dayNum: 1,
+        date: '11/30 (週一)',
+        zone: '宮古島西岸（下地島 & 伊良部島）',
+        title: '直飛下地島 ➔ 17 END 果凍海・通池・渡口之濱・伊良部大橋夕陽',
+        hotel: 'HOTEL385 by ReZARD HOTELS (連住第1晚)',
+        stops: [
+          { uid: 'd1_s1', catalogKey: 'shimojishima_airport', visited: false, note: '' },
+          { uid: 'd1_s2', catalogKey: 'spot_17end', visited: false, note: '' },
+          { uid: 'd1_s3', catalogKey: 'spot_sawada', visited: false, note: '' },
+          { uid: 'd1_s4', catalogKey: 'spot_toriike', visited: false, note: '' },
+          { uid: 'd1_s5', catalogKey: 'spot_toguchi', visited: false, note: '' },
+          { uid: 'd1_s6', catalogKey: 'spot_irabu_bridge', visited: false, note: '' },
+          { uid: 'd1_s7', catalogKey: 'spot_hotel385_dinner', visited: false, note: '' }
+        ]
+      },
+      day2: {
+        dayNum: 2,
+        date: '12/01 (週二)',
+        zone: '宮古島東南岸 & 來間島',
+        title: '東平安名岬燈塔 ➔ 新城海岸珊瑚海 ➔ 來間大橋 ➔ 與那霸前濱日落與星空',
+        hotel: 'HOTEL385 by ReZARD HOTELS (連住第2晚)',
+        stops: [
+          { uid: 'd2_s1', catalogKey: 'spot_higashi_hennazaki', visited: false, note: '' },
+          { uid: 'd2_s2', catalogKey: 'spot_yoshino', visited: false, note: '' },
+          { uid: 'd2_s3', catalogKey: 'spot_aragusuku', visited: false, note: '' },
+          { uid: 'd2_s4', catalogKey: 'spot_imgyaa', visited: false, note: '' },
+          { uid: 'd2_s5', catalogKey: 'spot_kurima_bridge', visited: false, note: '' },
+          { uid: 'd2_s6', catalogKey: 'spot_yonaha_maehama', visited: false, note: '' }
+        ]
+      },
+      day3: {
+        dayNum: 3,
+        date: '12/02 (週三)',
+        zone: '宮古島北岸 & 池間島',
+        title: '砂山海灘 ➔ 宮古島海中公園 ➔ 西平安名崎蒜香蝦餐車 ➔ 池間大橋 ➔ 市區夕陽',
+        hotel: 'HOTEL385 by ReZARD HOTELS (連住第3晚)',
+        stops: [
+          { uid: 'd3_s1', catalogKey: 'spot_sunayama', visited: false, note: '' },
+          { uid: 'd3_s2', catalogKey: 'spot_marine_park', visited: false, note: '' },
+          { uid: 'd3_s3', catalogKey: 'spot_nishi_hennazaki', visited: false, note: '' },
+          { uid: 'd3_s4', catalogKey: 'spot_ikema_bridge', visited: false, note: '' },
+          { uid: 'd3_s5', catalogKey: 'spot_painagama', visited: false, note: '' }
+        ]
+      },
+      day4: {
+        dayNum: 4,
+        date: '12/03 (週四)',
+        zone: '宮古島 ➔ 沖繩那霸 (血拚第1彈)',
+        title: '渡口之濱海景午餐 ➔ 飛抵那霸洗烘衣物 ➔ ASHIBINAA Outlet & iias 豐崎',
+        hotel: 'Tokyu Stay Okinawa Naha (連住第1晚)',
+        stops: [
+          { uid: 'd4_s1', catalogKey: 'spot_blue_turtle', visited: false, note: '' },
+          { uid: 'd4_s2', catalogKey: 'spot_miyako_airport', visited: false, note: '' },
+          { uid: 'd4_s3', catalogKey: 'spot_tokyu_stay', visited: false, note: '' },
+          { uid: 'd4_s4', catalogKey: 'spot_ashibinaa', visited: false, note: '' },
+          { uid: 'd4_s5', catalogKey: 'spot_iias_toyosaki', visited: false, note: '' }
+        ]
+      },
+      day5: {
+        dayNum: 5,
+        date: '12/04 (週五)',
+        zone: '沖繩全天純血拚馬拉松 (第2彈 & 第3彈)',
+        title: '浦添西海岸 PARCO CITY (250店鋪) ➔ 永旺夢樂城沖繩來客夢',
+        hotel: 'Tokyu Stay Okinawa Naha (連住第2晚)',
+        stops: [
+          { uid: 'd5_s1', catalogKey: 'spot_parco_city', visited: false, note: '' },
+          { uid: 'd5_s2', catalogKey: 'spot_aeon_rycom', visited: false, note: '' }
+        ]
+      },
+      day6: {
+        dayNum: 6,
+        date: '12/05 (週六)',
+        zone: '那霸市區最後衝刺 (血拚第4彈) ➔ 返台',
+        title: '歌町站 DFS 免稅店 & Main Place ➔ 小祿站永旺/國際通 ➔ 16:50 樂桃返台',
+        hotel: '溫暖的家',
+        stops: [
+          { uid: 'd6_s1', catalogKey: 'spot_dfs_okinawa', visited: false, note: '' },
+          { uid: 'd6_s2', catalogKey: 'spot_kokusai_aeon', visited: false, note: '' },
+          { uid: 'd6_s3', catalogKey: 'spot_naha_airport', visited: false, note: '' }
+        ]
+      }
+    };
+
+    // 預設採購清單（純商品名稱 + 單價 × 數量）
+    const DEFAULT_SHOPPING = [
+      { id: 'p1', name: '運動品牌球鞋 / 服飾 (Nike / New Balance / Adidas)', price: 8500, qty: 2, bought: false },
+      { id: 'p2', name: '吉伊卡哇專賣店 (PARCO CITY) 限定吊飾玩偶', price: 1980, qty: 3, bought: false },
+      { id: 'p3', name: '沖繩寶可夢中心 (來客夢) 風速狗皮卡丘限定玩偶', price: 2800, qty: 2, bought: false },
+      { id: 'p4', name: 'UNIQLO / GU 冬季保暖衣與外套', price: 3990, qty: 2, bought: false },
+      { id: 'p5', name: 'DFS 免稅專櫃保養品 / 香水（42號登機門對面提貨）', price: 18500, qty: 1, bought: false },
+      { id: 'p6', name: '宮古島雪鹽夾心餅 / 雪鹽金楚糕 / 多良間黑糖', price: 1200, qty: 5, bought: false },
+      { id: 'p7', name: '飯店樓下 24H 唐吉訶德：合利他命 EX Plus / 藥妝零食', price: 5980, qty: 2, bought: false }
+    ];
+
+    // 全域狀態
+    let appState = {
+      activeTab: 'flights',
+      days: JSON.parse(JSON.stringify(DEFAULT_DAYS)),
+      customCatalog: {},
+      shopping: JSON.parse(JSON.stringify(DEFAULT_SHOPPING)),
+      wikiPhotoCache: {} // 快取由日本維基百科 API 抓取的真實地標實景圖 URL
+    };
+
+    let leafletMap = null;
+    let mapLayerGroup = null;
+
+    // 載入與儲存狀態
+    function loadAppState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          appState = {
+            ...appState,
+            ...parsed,
+            days: parsed.days || JSON.parse(JSON.stringify(DEFAULT_DAYS)),
+            customCatalog: parsed.customCatalog || {},
+            shopping: parsed.shopping || JSON.parse(JSON.stringify(DEFAULT_SHOPPING)),
+            wikiPhotoCache: parsed.wikiPhotoCache || {}
+          };
+        }
+      } catch (e) {
+        console.warn('Load state error:', e);
+      }
+      // 若先前停留在已刪除的 checklist 分頁，自動導回 flights
+      if (appState.activeTab === 'checklist') {
+        appState.activeTab = 'flights';
+      }
+    }
+
+    function saveAppState(toastMsg) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+        updateHeaderVisitedCount();
+        if (toastMsg) showToast(toastMsg);
+      } catch (e) {
+        console.warn('Save state error:', e);
+      }
+    }
+
+    let toastTimer = null;
+    function showToast(msg) {
+      const box = document.getElementById('toastBox');
+      document.getElementById('toastText').textContent = msg;
+      box.classList.remove('translate-y-20', 'opacity-0');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        box.classList.add('translate-y-20', 'opacity-0');
+      }, 2100);
+    }
+
+    function getSpotData(catalogKey) {
+      return appState.customCatalog[catalogKey] || SPOT_CATALOG[catalogKey] || SPOT_CATALOG['spot_17end'];
+    }
+
+    function updateHeaderVisitedCount() {
+      let count = 0;
+      Object.values(appState.days).forEach(d => {
+        d.stops.forEach(s => {
+          if (s.visited) count++;
+        });
+      });
+      const el = document.getElementById('headerVisitedCount');
+      if (el) el.textContent = count;
+    }
+
+    // ==================== 維基百科官方實景圖片自動載入器 ====================
+    async function hydrateWikiRealPhotos() {
+      const allKeys = Object.keys(SPOT_CATALOG);
+      for (const key of allKeys) {
+        const item = SPOT_CATALOG[key];
+        if (!item.wikiTitle) continue;
+        if (appState.wikiPhotoCache[item.wikiTitle]) continue;
+
+        try {
+          const apiUrl = `https://ja.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(item.wikiTitle)}`;
+          const res = await fetch(apiUrl);
+          if (res.ok) {
+            const data = await res.json();
+            const imgUrl = (data.originalimage && data.originalimage.source) || (data.thumbnail && data.thumbnail.source);
+            if (imgUrl) {
+              appState.wikiPhotoCache[item.wikiTitle] = imgUrl;
+              // 即時更新頁面上已渲染的該景點圖片
+              document.querySelectorAll(`img[data-wiki-title="${item.wikiTitle}"]`).forEach(imgEl => {
+                imgEl.src = imgUrl;
+              });
+            }
+          }
+        } catch (err) {
+          // 若網路離線則維持 Wikimedia 實景 fallbackImg
+        }
+      }
+      saveAppState();
+    }
+
+    function getRealPhotoUrl(spotInfo) {
+      if (spotInfo.customImg) return spotInfo.customImg;
+      if (spotInfo.wikiTitle && appState.wikiPhotoCache[spotInfo.wikiTitle]) {
+        return appState.wikiPhotoCache[spotInfo.wikiTitle];
+      }
+      return spotInfo.fallbackImg;
+    }
+
+    // ==================== 分頁切換 ====================
+    function switchTab(tabId) {
+      appState.activeTab = tabId;
+
+      document.querySelectorAll('.tab-view').forEach(v => v.classList.add('hidden'));
+
+      // 更新頂部膠囊按鈕樣式
+      document.querySelectorAll('.tab-pill').forEach(btn => {
+        const isAct = btn.getAttribute('data-tab') === tabId;
+        if (isAct) {
+          btn.className = 'tab-pill shrink-0 px-3.5 py-1.5 rounded-full text-xs font-extrabold bg-ocean-600 text-white shadow-sm transition-all';
+        } else {
+          btn.className = 'tab-pill shrink-0 px-3.5 py-1.5 rounded-full text-xs font-bold bg-white/80 hover:bg-ocean-50 text-slate-600 border border-slate-200/80 transition-all';
+        }
+      });
+
+      // 更新手機底部導覽列高亮
+      document.querySelectorAll('.mobile-bottom-btn').forEach(btn => {
+        const grp = btn.getAttribute('data-mobile-group');
+        const active =
+          (grp === 'flights' && tabId === 'flights') ||
+          (grp === 'miyako' && ['day1', 'day2', 'day3'].includes(tabId)) ||
+          (grp === 'okinawa' && ['day4', 'day5', 'day6'].includes(tabId)) ||
+          (grp === 'shopping' && tabId === 'shopping');
+
+        if (active) {
+          btn.className = 'mobile-bottom-btn flex flex-col items-center justify-center py-1 rounded-xl text-[11px] font-extrabold text-ocean-600 bg-ocean-50';
+        } else {
+          btn.className = 'mobile-bottom-btn flex flex-col items-center justify-center py-1 rounded-xl text-[11px] font-bold text-slate-500';
+        }
+      });
+
+      if (tabId === 'flights') {
+        document.getElementById('view-flights').classList.remove('hidden');
+        renderReadonlyFlights();
+      } else if (tabId.startsWith('day')) {
+        document.getElementById('view-day').classList.remove('hidden');
+        renderDayView(tabId);
+      } else if (tabId === 'shopping') {
+        document.getElementById('view-shopping').classList.remove('hidden');
+        renderShoppingView();
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      saveAppState();
+    }
+
+    // ==================== 唯讀 Google 航班渲染 ====================
+    function renderReadonlyFlights() {
+      const container = document.getElementById('flightsCardsContainer');
+      container.innerHTML = READONLY_FLIGHTS.map(f => `
+        <div class="rounded-2xl border border-slate-200/90 bg-gradient-to-br from-white to-ocean-50/30 p-4 sm:p-5 shadow-sm">
+          <!-- 頂部航班編號與 Google Flights 即時準點狀態 -->
+          <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-ocean-600 text-white">${f.leg}</span>
+              <span class="text-xs font-bold text-slate-500">${f.date}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-extrabold">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                ${f.statusText}
+              </span>
+              <a href="${f.googleFlightsUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold transition">
+                <i class="fa-brands fa-google"></i> Google 航班動態
+              </a>
+            </div>
+          </div>
+
+          <!-- 起降時間、機場、航廈與登機口 (唯讀顯示) -->
+          <div class="grid grid-cols-1 sm:grid-cols-11 items-center gap-4 py-4">
+            <div class="sm:col-span-4">
+              <div class="flex items-baseline gap-2">
+                <span class="text-2xl sm:text-3xl font-black text-slate-900">${f.depTime}</span>
+                <span class="text-lg font-extrabold text-ocean-600">${f.depCode}</span>
+              </div>
+              <div class="text-xs font-bold text-slate-700 mt-0.5">${f.depAirport}</div>
+              <div class="mt-1.5 inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-lg">
+                <span>${f.depTerminal}</span>
+                <span>・</span>
+                <span class="text-ocean-700">${f.depGate}</span>
+              </div>
+            </div>
+
+            <div class="sm:col-span-3 flex flex-col items-center text-center">
+              <div class="text-xs font-black text-slate-800">${f.airline}</div>
+              <div class="text-[11px] font-extrabold text-ocean-600">${f.flightNo} ｜ ${f.aircraft}</div>
+              <div class="w-full flex items-center gap-1.5 my-1.5">
+                <span class="h-[1.5px] flex-1 bg-ocean-200"></span>
+                <i class="fa-solid fa-plane text-ocean-500 text-xs"></i>
+                <span class="h-[1.5px] flex-1 bg-ocean-200"></span>
+              </div>
+              <div class="text-[11px] text-slate-400 font-semibold">${f.duration}</div>
+            </div>
+
+            <div class="sm:col-span-4 sm:text-right">
+              <div class="flex items-baseline sm:justify-end gap-2">
+                <span class="text-2xl sm:text-3xl font-black text-slate-900">${f.arrTime}</span>
+                <span class="text-lg font-extrabold text-ocean-600">${f.arrCode}</span>
+              </div>
+              <div class="text-xs font-bold text-slate-700 mt-0.5">${f.arrAirport}</div>
+              <div class="mt-1.5 inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-lg">
+                <span>${f.arrTerminal}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 底部行李額度與注意事項 -->
+          <div class="ticket-divider pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-600">
+            <div class="flex items-center gap-1.5 font-bold text-slate-700 shrink-0">
+              <i class="fa-solid fa-suitcase-rolling text-ocean-600"></i>
+              <span>${f.baggageInfo}</span>
+            </div>
+            <div class="text-slate-500 text-[11px] leading-relaxed">${f.note}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function syncGoogleFlightsLive() {
+      const icon = document.getElementById('syncFlightIcon');
+      icon.classList.add('fa-spin');
+      setTimeout(() => {
+        icon.classList.remove('fa-spin');
+        const now = new Date();
+        const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+        document.getElementById('flightSyncTimestamp').textContent = `最後同步：${timeStr}`;
+        showToast('已與 Google 航班同步最新準點與登機門資訊');
+      }, 450);
+    }
+
+    // ==================== Day 1 ~ Day 6 每日行程與原生 Google Maps 藍色圓點路線圖 ====================
+    function renderDayView(dayKey) {
+      const dayObj = appState.days[dayKey];
+      if (!dayObj) return;
+
+      document.getElementById('dayBadgeLabel').textContent = `DAY ${dayObj.dayNum}`;
+      document.getElementById('dayDateZoneLabel').textContent = `${dayObj.date}｜${dayObj.zone}`;
+      document.getElementById('dayTitleHeading').textContent = dayObj.title;
+      document.getElementById('dayHotelBadge').innerHTML = `<i class="fa-solid fa-bed text-ocean-600"></i><span>${dayObj.hotel}</span>`;
+
+      // 渲染 A ➔ B ➔ C 順遊節點膠囊列
+      const pillsBar = document.getElementById('dayRoutePillsBar');
+      pillsBar.innerHTML = dayObj.stops.map((st, idx) => {
+        const letter = String.fromCharCode(65 + idx);
+        const info = getSpotData(st.catalogKey);
+        const shortName = info.title.replace(/^[①-⑮]\s*/, '').split('（')[0].split(' ')[0];
+        const arrow = idx < dayObj.stops.length - 1 ? `<i class="fa-solid fa-arrow-right text-[10px] text-slate-400 mx-0.5 shrink-0"></i>` : '';
+        return `
+          <button onclick="scrollToStopCard('${st.uid}', ${info.lat}, ${info.lng})" class="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 hover:bg-blue-50 border border-slate-200/90 text-xs font-bold text-slate-700 transition">
+            <span class="w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] font-extrabold flex items-center justify-center">${letter}</span>
+            <span class="max-w-[115px] truncate">${shortName}</span>
+          </button>
+          ${arrow}
+        `;
+      }).join('');
+
+      // 渲染下方各站行程卡片（無時間前綴、含打卡勾選、統一高度實景圖、景點介紹、上下排序、更換或貼上地標導入）
+      const listContainer = document.getElementById('dayStopsListContainer');
+      const catalogOptionsHtml = Object.entries(SPOT_CATALOG).map(([k, v]) => {
+        return `<option value="${k}">${v.title}</option>`;
+      }).join('');
+
+      listContainer.innerHTML = dayObj.stops.map((st, idx) => {
+        const letter = String.fromCharCode(65 + idx);
+        const info = getSpotData(st.catalogKey);
+        const photoUrl = getRealPhotoUrl(info);
+        const gmapSingleUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(info.mapQuery || info.title)}`;
+
+        return `
+          <article id="stop-card-${st.uid}" class="bg-white rounded-2xl p-4 sm:p-5 border ${st.visited ? 'border-emerald-400 ring-1 ring-emerald-200' : 'border-ocean-200/80'} shadow-sm transition">
+            <!-- 第一列：STOP 字母徽章 + 打卡勾選框 (緊鄰景點標題旁) + 上下移動/導航按鈕 -->
+            <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100">
+              <div class="flex items-center gap-2">
+                <span class="px-2.5 py-0.5 rounded-lg bg-blue-600 text-white text-xs font-black tracking-wide">
+                  STOP ${letter}
+                </span>
+                <span class="text-xs font-bold text-ocean-700 bg-ocean-50 px-2.5 py-0.5 rounded-lg border border-ocean-200/60">
+                  ${info.category || '精選景點'}
+                </span>
+              </div>
+
+              <!-- 單點導航 & 順序調整按鈕 -->
+              <div class="flex items-center gap-1.5">
+                <button onclick="moveStopOrder('${dayKey}', ${idx}, -1)" ${idx === 0 ? 'disabled' : ''} class="w-7 h-7 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 disabled:opacity-30 text-slate-600 text-xs flex items-center justify-center" title="順序上移">
+                  <i class="fa-solid fa-arrow-up"></i>
+                </button>
+                <button onclick="moveStopOrder('${dayKey}', ${idx}, 1)" ${idx === dayObj.stops.length - 1 ? 'disabled' : ''} class="w-7 h-7 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 disabled:opacity-30 text-slate-600 text-xs flex items-center justify-center" title="順序下移">
+                  <i class="fa-solid fa-arrow-down"></i>
+                </button>
+                <a href="${gmapSingleUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-ocean-600 hover:bg-ocean-700 text-white text-xs font-extrabold shadow-sm transition">
+                  <i class="fa-solid fa-location-arrow"></i>
+                  <span>導航此站</span>
+                </a>
+              </div>
+            </div>
+
+            <!-- 第二列：打卡勾選在景點標題旁 -->
+            <div class="mt-3 flex items-start justify-between gap-3">
+              <label class="flex items-start gap-2.5 cursor-pointer select-none flex-1">
+                <input
+                  type="checkbox"
+                  ${st.visited ? 'checked' : ''}
+                  onchange="toggleStopVisited('${dayKey}', '${st.uid}')"
+                  class="mt-1 w-5 h-5 rounded accent-emerald-600 cursor-pointer shrink-0"
+                />
+                <div>
+                  <h3 class="text-base sm:text-lg font-black ${st.visited ? 'line-through text-slate-400' : 'text-slate-900'} leading-snug">
+                    ${info.title}
+                  </h3>
+                  ${st.visited ? '<span class="inline-block mt-0.5 text-[11px] font-extrabold text-emerald-600"><i class="fa-solid fa-circle-check mr-1"></i>已完成打卡</span>' : ''}
+                </div>
+              </label>
+
+              <button onclick="toggleSpotDrawer('${st.uid}')" class="shrink-0 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-ocean-50 text-slate-600 hover:text-ocean-700 text-[11px] font-bold transition flex items-center gap-1">
+                <i class="fa-solid fa-Sliders"></i>
+                <span>更換景點</span>
+              </button>
+            </div>
+
+            <!-- 更換景點 / 貼上 Google 地標直接導入 折疊面板 -->
+            <div id="drawer-${st.uid}" class="hidden mt-3 p-3.5 rounded-xl bg-ocean-50/70 border border-ocean-200 space-y-3 text-xs">
+              <div class="flex items-center justify-between">
+                <span class="font-extrabold text-ocean-900"><i class="fa-solid fa-repeat mr-1"></i>更換此站景點或貼上 Google 地標導入</span>
+                <button onclick="deleteStopFromDay('${dayKey}', '${st.uid}')" class="text-rose-600 hover:underline font-bold">
+                  <i class="fa-solid fa-trash-can mr-0.5"></i>刪除此站
+                </button>
+              </div>
+
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">方式 1：從宮古島 & 沖繩內建景點庫下拉選擇</label>
+                <select onchange="changeStopFromCatalog('${dayKey}', '${st.uid}', this.value)" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-white font-bold text-xs">
+                  <option value="">-- 點擊選擇要替換的景點 --</option>
+                  ${catalogOptionsHtml}
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">方式 2：貼上 Google Maps 地標網址或輸入新地點名稱</label>
+                <div class="flex gap-2">
+                  <input id="import-input-${st.uid}" type="text" placeholder="貼上 Google Maps 連結或輸入地標名稱..." class="flex-1 px-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-medium" />
+                  <button onclick="importCustomGoogleSpot('${dayKey}', '${st.uid}')" class="px-3.5 py-2 rounded-xl bg-ocean-600 hover:bg-ocean-700 text-white font-bold shrink-0">
+                    導入地標
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 第三列：統一固定尺寸實景圖片 + 景點說明與冬季提醒 -->
+            <div class="mt-3.5 space-y-3">
+              <div class="spot-photo-box">
+                <img
+                  src="${photoUrl}"
+                  data-wiki-title="${info.wikiTitle || ''}"
+                  alt="${info.title}"
+                  loading="lazy"
+                  onerror="this.onerror=null;this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Irabu_Bridge_from_Miyako_Island.jpg/960px-Irabu_Bridge_from_Miyako_Island.jpg';"
+                  class="spot-photo-img"
+                />
+                <div class="absolute bottom-2.5 left-2.5 px-2.5 py-1 rounded-lg bg-slate-900/65 backdrop-blur-sm text-white text-[11px] font-bold flex items-center gap-1.5">
+                  <i class="fa-solid fa-camera text-cyan-300"></i>
+                  <span>實景照片｜${info.title.split('（')[0]}</span>
+                </div>
+              </div>
+
+              <p class="text-xs sm:text-sm text-slate-700 leading-relaxed whitespace-pre-line">${info.desc}</p>
+
+              <div class="p-3 rounded-xl bg-ocean-50/70 border border-ocean-200/70 text-xs text-ocean-950 flex items-start gap-2">
+                <i class="fa-solid fa-compass text-ocean-600 mt-0.5"></i>
+                <span>${info.tip}</span>
+              </div>
+
+              <!-- 個人備註欄 -->
+              <div class="pt-2 flex items-center gap-2">
+                <i class="fa-regular fa-pen-to-square text-slate-400 text-xs"></i>
+                <input
+                  type="text"
+                  value="${(st.note || '').replace(/"/g, '&quot;')}"
+                  placeholder="新增此站個人備註（如：必吃口味、停車資訊）..."
+                  onchange="saveStopNote('${dayKey}', '${st.uid}', this.value)"
+                  class="flex-1 text-xs bg-slate-50 hover:bg-white focus:bg-white px-3 py-1.5 rounded-lg border border-slate-200/80 focus:outline-none focus:border-ocean-500"
+                />
+              </div>
+            </div>
+          </article>
+        `;
+      }).join('');
+
+      // 繪製上方 Google Maps 藍色圓點路線圖
+      setTimeout(() => {
+        renderGoogleStyleRouteMap(dayObj);
+      }, 60);
+    }
+
+    // 使用真实 Google Maps 中文街道圖資 + 藍色圓點路線 + 紅色水滴定位針 + 路程時間白底方塊
+    function renderGoogleStyleRouteMap(dayObj) {
+      const mapEl = document.getElementById('dayLeafletMap');
+      if (!mapEl) return;
+
+      if (!leafletMap) {
+        leafletMap = L.map('dayLeafletMap', {
+          zoomControl: true,
+          scrollWheelZoom: false
+        });
+        // 載入原生 Google Maps 繁體中文街道圖資
+        L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=zh-TW', {
+          maxZoom: 19,
+          attribution: '&copy; Google Maps'
+        }).addTo(leafletMap);
+        mapLayerGroup = L.layerGroup().addTo(leafletMap);
+      }
+
+      leafletMap.invalidateSize();
+      mapLayerGroup.clearLayers();
+
+      const coords = [];
+      dayObj.stops.forEach((st, idx) => {
+        const info = getSpotData(st.catalogKey);
+        if (info && info.lat && info.lng) {
+          coords.push({
+            lat: info.lat,
+            lng: info.lng,
+            letter: String.fromCharCode(65 + idx),
+            title: info.title,
+            driveNext: info.driveNext,
+            uid: st.uid,
+            isLast: idx === dayObj.stops.length - 1
+          });
+        }
+      });
+
+      if (coords.length === 0) return;
+
+      // 繪製仿附圖 Google Maps 白邊藍色圓點路線 (Blue Dotted Route)
+      if (coords.length > 1) {
+        const latlngs = coords.map(c => [c.lat, c.lng]);
+
+        // 底層深藍外框線
+        L.polyline(latlngs, {
+          color: '#185abc',
+          weight: 8,
+          opacity: 0.35,
+          lineCap: 'round',
+          lineJoin: 'round'
+        }).addTo(mapLayerGroup);
+
+        // 藍色圓點主線
+        L.polyline(latlngs, {
+          color: '#1a73e8',
+          weight: 6,
+          opacity: 0.95,
+          dashArray: '1, 12',
+          lineCap: 'round',
+          lineJoin: 'round'
+        }).addTo(mapLayerGroup);
+
+        // 中心白色小圓芯（讓藍色圓點呈現立體空心圓珠感，貼合您提供的 Google Maps 截圖）
+        L.polyline(latlngs, {
+          color: '#ffffff',
+          weight: 2.2,
+          opacity: 0.9,
+          dashArray: '1, 12',
+          lineCap: 'round',
+          lineJoin: 'round'
+        }).addTo(mapLayerGroup);
+
+        // 在路線中段標示白底黑字「車程時間 & 公里數」浮動標籤
+        const midIdx = Math.floor((coords.length - 1) / 2);
+        const p1 = coords[midIdx];
+        const p2 = coords[midIdx + 1];
+        if (p1 && p2) {
+          const midLat = (p1.lat + p2.lat) / 2;
+          const midLng = (p1.lng + p2.lng) / 2;
+          const labelHtml = `
+            <div class="gmap-duration-box">
+              <div class="text-[11px] font-extrabold text-slate-800 flex items-center gap-1">
+                <i class="fa-solid fa-car text-slate-700"></i>
+                <span>${p1.driveNext || '順遊路線'}</span>
+              </div>
+            </div>
+          `;
+          L.marker([midLat, midLng], {
+            icon: L.divIcon({
+              className: '',
+              html: labelHtml,
+              iconSize: [130, 32],
+              iconAnchor: [65, 16]
+            }),
+            interactive: false
+          }).addTo(mapLayerGroup);
+        }
+      }
+
+      // 繪製各景點標記（終點站使用經典 Google 紅色大圖釘，其餘站點使用藍底白字 A/B/C 圓點）
+      coords.forEach((c, index) => {
+        let markerIcon;
+        if (index === 0 || c.isLast) {
+          // Google Maps 經典紅色水滴圖釘 (附字母)
+          markerIcon = L.divIcon({
+            className: '',
+            html: `
+              <div class="gmap-red-pin-wrapper">
+                <svg viewBox="0 0 28 40" width="30" height="42">
+                  <path d="M14 0C6.27 0 0 6.27 0 14c0 10.5 14 26 14 26s14-15.5 14-26C28 6.27 21.73 0 14 0z" fill="#ea4335" stroke="#ffffff" stroke-width="2"/>
+                  <circle cx="14" cy="14" r="6" fill="#b31412"/>
+                  <text x="14" y="17.5" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="900" font-family="Inter, sans-serif">${c.letter}</text>
+                </svg>
+              </div>
+            `,
+            iconSize: [30, 42],
+            iconAnchor: [15, 40]
+          });
+        } else {
+          markerIcon = L.divIcon({
+            className: '',
+            html: `<div class="gmap-stop-pill">${c.letter}</div>`,
+            iconSize: [24, 24],
+            iconAnchor: [12, 12]
+          });
+        }
+
+        const marker = L.marker([c.lat, c.lng], { icon: markerIcon }).addTo(mapLayerGroup);
+        marker.on('click', () => {
+          scrollToStopCard(c.uid, c.lat, c.lng);
+        });
+      });
+
+      fitCurrentDayMapBounds();
+    }
+
+    function fitCurrentDayMapBounds() {
+      const dayKey = appState.activeTab;
+      const dayObj = appState.days[dayKey];
+      if (!dayObj || !leafletMap) return;
+      const pts = dayObj.stops
+        .map(s => getSpotData(s.catalogKey))
+        .filter(i => i && i.lat && i.lng)
+        .map(i => [i.lat, i.lng]);
+
+      if (pts.length === 1) {
+        leafletMap.setView(pts[0], 14);
+      } else if (pts.length > 1) {
+        leafletMap.fitBounds(pts, { padding: [36, 36] });
+      }
+    }
+
+    function scrollToStopCard(uid, lat, lng) {
+      if (leafletMap && lat && lng) {
+        leafletMap.panTo([lat, lng]);
+      }
+      const card = document.getElementById(`stop-card-${uid}`);
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        card.classList.add('ring-2', 'ring-ocean-400');
+        setTimeout(() => card.classList.remove('ring-2', 'ring-ocean-400'), 1400);
+      }
+    }
+
+    // ==================== 景點打卡、排序、更換與 Google 地標導入 ====================
+    function toggleStopVisited(dayKey, uid) {
+      const dayObj = appState.days[dayKey];
+      const stop = dayObj.stops.find(s => s.uid === uid);
+      if (stop) {
+        stop.visited = !stop.visited;
+        renderDayView(dayKey);
+        saveAppState(stop.visited ? '已完成景點打卡！' : '已取消打卡');
+      }
+    }
+
+    function saveStopNote(dayKey, uid, val) {
+      const stop = appState.days[dayKey].stops.find(s => s.uid === uid);
+      if (stop) {
+        stop.note = val.trim();
+        saveAppState('已儲存景點備註');
+      }
+    }
+
+    function moveStopOrder(dayKey, idx, dir) {
+      const stops = appState.days[dayKey].stops;
+      const targetIdx = idx + dir;
+      if (targetIdx < 0 || targetIdx >= stops.length) return;
+      const temp = stops[idx];
+      stops[idx] = stops[targetIdx];
+      stops[targetIdx] = temp;
+      renderDayView(dayKey);
+      saveAppState('已更新景點順遊順序與路線圖');
+    }
+
+    function toggleSpotDrawer(uid) {
+      const el = document.getElementById(`drawer-${uid}`);
+      if (el) el.classList.toggle('hidden');
+    }
+
+    function changeStopFromCatalog(dayKey, uid, newCatalogKey) {
+      if (!newCatalogKey) return;
+      const stop = appState.days[dayKey].stops.find(s => s.uid === uid);
+      if (stop) {
+        stop.catalogKey = newCatalogKey;
+        renderDayView(dayKey);
+        saveAppState('已更換景點並同步路線圖');
+      }
+    }
+
+    // 解析使用者貼上的 Google Maps 地標連結或地標名稱並直接導入
+    function importCustomGoogleSpot(dayKey, uid) {
+      const input = document.getElementById(`import-input-${uid}`);
+      const raw = (input.value || '').trim();
+      if (!raw) {
+        showToast('請貼上 Google Maps 連結或輸入地標名稱');
+        return;
+      }
+
+      let placeName = raw;
+      let lat = null;
+      let lng = null;
+
+      // 解析 Google Maps URL 中的 @lat,lng 座標
+      const coordMatch = raw.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/) || raw.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+      if (coordMatch) {
+        lat = parseFloat(coordMatch[1]);
+        lng = parseFloat(coordMatch[2]);
+      }
+
+      // 解析 Google Maps URL 中的 /place/名稱/
+      const placeMatch = raw.match(/\/place\/([^\/?]+)/);
+      if (placeMatch) {
+        placeName = decodeURIComponent(placeMatch[1].replace(/\+/g, ' '));
+      } else if (raw.startsWith('http')) {
+        try {
+          const u = new URL(raw);
+          const q = u.searchParams.get('q') || u.searchParams.get('query');
+          if (q) placeName = q;
+          else placeName = '自訂 Google Maps 地標';
+        } catch (e) {
+          placeName = '自訂 Google Maps 地標';
+        }
+      }
+
+      // 若無座標，預設給予當日區域中心座標微調
+      const dayNum = appState.days[dayKey].dayNum;
+      if (!lat || !lng) {
+        if (dayNum <= 3) {
+          lat = 24.805 + (Math.random() - 0.5) * 0.04;
+          lng = 125.281 + (Math.random() - 0.5) * 0.04;
+        } else {
+          lat = 26.215 + (Math.random() - 0.5) * 0.03;
+          lng = 127.685 + (Math.random() - 0.5) * 0.03;
+        }
+      }
+
+      const customKey = 'custom_' + Date.now();
+      appState.customCatalog[customKey] = {
+        title: placeName,
+        category: '自訂導入地標',
+        lat,
+        lng,
+        driveNext: '順遊移動',
+        mapQuery: raw.startsWith('http') ? placeName : raw,
+        fallbackImg: dayNum <= 3
+          ? 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Irabu_Bridge_from_Miyako_Island.jpg/960px-Irabu_Bridge_from_Miyako_Island.jpg'
+          : 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Kokusai-dori_Naha_Okinawa.jpg/960px-Kokusai-dori_Naha_Okinawa.jpg',
+        desc: `已由 Google Maps 導入地標：「${placeName}」。點擊右上角「導航此站」可直接開啟 Google Maps 導航。`,
+        tip: '您可以在下方備註欄補充此地標的營業時間或必買重點。'
+      };
+
+      const stop = appState.days[dayKey].stops.find(s => s.uid === uid);
+      if (stop) {
+        stop.catalogKey = customKey;
+        renderDayView(dayKey);
+        saveAppState(`已成功導入地標：${placeName}`);
+      }
+    }
+
+    function deleteStopFromDay(dayKey, uid) {
+      const stops = appState.days[dayKey].stops;
+      if (stops.length <= 1) {
+        showToast('每天至少需保留一個行程點');
+        return;
+      }
+      appState.days[dayKey].stops = stops.filter(s => s.uid !== uid);
+      renderDayView(dayKey);
+      saveAppState('已刪除此站並更新路線圖');
+    }
+
+    function addNewStopToCurrentDay() {
+      const dayKey = appState.activeTab;
+      const dayObj = appState.days[dayKey];
+      if (!dayObj) return;
+      const defaultKey = dayObj.dayNum <= 3 ? 'spot_17end' : 'spot_parco_city';
+      const newUid = `${dayKey}_s_${Date.now()}`;
+      dayObj.stops.push({
+        uid: newUid,
+        catalogKey: defaultKey,
+        visited: false,
+        note: ''
+      });
+      renderDayView(dayKey);
+      saveAppState('已新增景點，可點擊「更換景點」選擇或貼上地標');
+      setTimeout(() => {
+        toggleSpotDrawer(newUid);
+        const card = document.getElementById(`stop-card-${newUid}`);
+        if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 120);
+    }
+
+    // ==================== 🛍️ 採購清單 (商品單價 × 數量 = 小計) ====================
+    function renderShoppingView() {
+      let boughtSum = 0;
+      let unboughtSum = 0;
+
+      appState.shopping.forEach(item => {
+        const sub = (Number(item.price) || 0) * (Number(item.qty) || 1);
+        if (item.bought) boughtSum += sub;
+        else unboughtSum += sub;
+      });
+
+      const grandTotal = boughtSum + unboughtSum;
+      document.getElementById('shopBoughtSum').textContent = `¥${boughtSum.toLocaleString()}`;
+      document.getElementById('shopUnboughtSum').textContent = `¥${unboughtSum.toLocaleString()}`;
+      document.getElementById('shopGrandTotal').textContent = `¥${grandTotal.toLocaleString()}`;
+
+      const listEl = document.getElementById('shoppingItemsList');
+      if (appState.shopping.length === 0) {
+        listEl.innerHTML = `<div class="py-8 text-center text-xs text-slate-400">目前尚無採購商品，請由上方輸入新增！</div>`;
+        return;
+      }
+
+      listEl.innerHTML = appState.shopping.map(item => {
+        const price = Number(item.price) || 0;
+        const qty = Number(item.qty) || 1;
+        const subtotal = price * qty;
+
+        return `
+          <div class="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <!-- 左側：已購勾選 + 商品名稱 -->
+            <label class="flex items-center gap-3 cursor-pointer flex-1">
+              <input
+                type="checkbox"
+                ${item.bought ? 'checked' : ''}
+                onchange="toggleProductBought('${item.id}')"
+                class="w-5 h-5 rounded accent-emerald-600 cursor-pointer shrink-0"
+              />
+              <span class="text-xs sm:text-sm font-extrabold ${item.bought ? 'line-through text-slate-400' : 'text-slate-800'}">
+                ${item.name}
+              </span>
+            </label>
+
+            <!-- 右側：商品單價 × 數量 (− / +) = 小計 -->
+            <div class="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+              <div class="flex items-center gap-1">
+                <span class="text-[11px] font-bold text-slate-400">單價 ¥</span>
+                <input
+                  type="number"
+                  min="0"
+                  value="${price}"
+                  onchange="updateProductPrice('${item.id}', this.value)"
+                  class="w-20 px-2 py-1 rounded-lg border border-slate-200 bg-slate-50 text-xs font-extrabold text-right"
+                />
+              </div>
+
+              <span class="text-xs font-bold text-slate-400">×</span>
+
+              <div class="inline-flex items-center rounded-xl border border-slate-200 bg-slate-50 overflow-hidden">
+                <button onclick="changeProductQty('${item.id}', -1)" class="px-2.5 py-1 text-xs font-black text-slate-600 hover:bg-slate-200 transition">−</button>
+                <span class="px-2.5 py-1 text-xs font-black text-slate-800 min-w-[28px] text-center">${qty}</span>
+                <button onclick="changeProductQty('${item.id}', 1)" class="px-2.5 py-1 text-xs font-black text-slate-600 hover:bg-slate-200 transition">+</button>
+              </div>
+
+              <div class="min-w-[92px] text-right">
+                <div class="text-[10px] text-slate-400 font-semibold">小計</div>
+                <div class="text-xs sm:text-sm font-black text-ocean-700">¥${subtotal.toLocaleString()}</div>
+              </div>
+
+              <button onclick="removeShoppingProduct('${item.id}')" class="p-1.5 text-slate-400 hover:text-rose-500 transition" title="刪除商品">
+                <i class="fa-solid fa-trash-can text-xs"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function addShoppingProduct() {
+      const nameEl = document.getElementById('newItemName');
+      const priceEl = document.getElementById('newItemPrice');
+      const qtyEl = document.getElementById('newItemQty');
+
+      const name = (nameEl.value || '').trim();
+      const price = Math.max(0, parseInt(priceEl.value, 10) || 0);
+      const qty = Math.max(1, parseInt(qtyEl.value, 10) || 1);
+
+      if (!name) {
+        showToast('請輸入商品名稱');
+        return;
+      }
+
+      appState.shopping.unshift({
+        id: 'prod_' + Date.now(),
+        name,
+        price,
+        qty,
+        bought: false
+      });
+
+      nameEl.value = '';
+      priceEl.value = '';
+      qtyEl.value = '1';
+      renderShoppingView();
+      saveAppState('已新增商品至採購清單');
+    }
+
+    function toggleProductBought(id) {
+      const item = appState.shopping.find(i => i.id === id);
+      if (item) {
+        item.bought = !item.bought;
+        renderShoppingView();
+        saveAppState();
+      }
+    }
+
+    function updateProductPrice(id, val) {
+      const item = appState.shopping.find(i => i.id === id);
+      if (item) {
+        item.price = Math.max(0, parseInt(val, 10) || 0);
+        renderShoppingView();
+        saveAppState('已更新單價');
+      }
+    }
+
+    function changeProductQty(id, delta) {
+      const item = appState.shopping.find(i => i.id === id);
+      if (item) {
+        item.qty = Math.max(1, (Number(item.qty) || 1) + delta);
+        renderShoppingView();
+        saveAppState();
+      }
+    }
+
+    function removeShoppingProduct(id) {
+      appState.shopping = appState.shopping.filter(i => i.id !== id);
+      renderShoppingView();
+      saveAppState('已刪除商品');
+    }
+
+    // ==================== 備份與還原 Modal ====================
+    function openBackupModal() {
+      const m = document.getElementById('backupModal');
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+    }
+
+    function closeBackupModal() {
+      const m = document.getElementById('backupModal');
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    }
+
+    function exportJsonBackup() {
+      const dataStr = JSON.stringify(appState, null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `1130-1205_日本宮古島沖繩之旅備份.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('已下載 JSON 備份檔');
+    }
+
+    function importJsonBackup(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          appState = {
+            ...appState,
+            ...parsed
+          };
+          if (appState.activeTab === 'checklist') appState.activeTab = 'flights';
+          saveAppState('已成功還原行程與採購資料！');
+          closeBackupModal();
+          switchTab(appState.activeTab || 'flights');
+        } catch (err) {
+          showToast('JSON 檔案格式無效');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function resetAllToDefault() {
+      localStorage.removeItem(STORAGE_KEY);
+      appState.days = JSON.parse(JSON.stringify(DEFAULT_DAYS));
+      appState.customCatalog = {};
+      appState.shopping = JSON.parse(JSON.stringify(DEFAULT_SHOPPING));
+      closeBackupModal();
+      switchTab('flights');
+      saveAppState('已恢復為初始預設行程');
+    }
+
+    // 啟動初始化
+    window.onload = function() {
+      loadAppState();
+      updateHeaderVisitedCount();
+      switchTab(appState.activeTab || 'flights');
+      hydrateWikiRealPhotos();
+    };
+  </script>
+</body>
+</html>

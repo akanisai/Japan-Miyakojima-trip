@@ -2,7 +2,11 @@
 <html lang="zh-Hant" class="scroll-smooth">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="宮古沖繩旅" />
+  <meta name="theme-color" content="#0284a8" />
   <title>11/30~12/5 日本宮古島+沖繩之旅</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -67,7 +71,7 @@
       background: linear-gradient(180deg, #eff8fb 0%, #f8fbfd 260px, #f4f9fb 100%);
       box-shadow: 0 0 40px rgba(2, 132, 168, 0.08);
       position: relative;
-      padding-bottom: 5.5rem;
+      padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
     }
     .dark .mobile-shell {
       background: linear-gradient(180deg, #091d2b 0%, #07131c 280px, #07131c 100%);
@@ -893,7 +897,7 @@
               </p>
             </div>
             <span id="foodCountBadge" class="shrink-0 px-2.5 py-1 rounded-full bg-miyako-50 dark:bg-miyako-950/60 border border-miyako-200 dark:border-miyako-800/50 text-[10px] font-extrabold text-miyako-700 dark:text-miyako-300">
-              共 75 間
+              共 32 間
             </span>
           </div>
 
@@ -1000,7 +1004,7 @@
     </main>
 
     <!-- 手機版底部固定導覽列 -->
-    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[520px] z-40 backdrop-blur-xl bg-white/95 dark:bg-slate-900/95 border-t border-miyako-100 dark:border-slate-800 px-2 py-1.5 shadow-[0_-4px_20px_rgba(2,132,168,0.08)]">
+    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[520px] z-40 backdrop-blur-xl bg-white/95 dark:bg-slate-900/95 border-t border-miyako-100 dark:border-slate-800 px-2 pt-1.5 shadow-[0_-4px_20px_rgba(2,132,168,0.08)]" style="padding-bottom: calc(0.375rem + env(safe-area-inset-bottom, 0px));">
       <div class="grid grid-cols-5 items-center text-center">
         <button onclick="switchTab('overview')" id="bnav-overview" class="flex flex-col items-center py-1 px-1.5 text-miyako-600 dark:text-miyako-400 font-bold text-[10px]">
           <i class="fa-solid fa-plane-departure text-sm mb-0.5"></i>
@@ -1526,7 +1530,7 @@
   </div>
 
   <!-- Toast 通知 (支援一鍵復原刪除) -->
-  <div id="toastBox" class="fixed bottom-16 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[460px] z-[80] hidden items-center justify-between gap-2 px-3.5 py-2.5 rounded-2xl bg-slate-900/95 text-white text-xs font-bold shadow-xl border border-slate-700">
+  <div id="toastBox" class="fixed left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[460px] z-[80] hidden items-center justify-between gap-2 px-3.5 py-2.5 rounded-2xl bg-slate-900/95 text-white text-xs font-bold shadow-xl border border-slate-700" style="bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px));">
     <div class="flex items-center gap-2 min-w-0">
       <i class="fa-solid fa-circle-check text-emerald-400 shrink-0"></i>
       <span id="toastMsg" class="truncate">已自動儲存</span>
@@ -3207,6 +3211,8 @@
 
     let fbAppInstance = null;
     let fbDbRef = null;
+    let fbPhotosRef = null;
+    let remotePhotosMap = {};
     let fbApplyingRemote = false;
     const FB_CLIENT_ID = 'client_' + Math.random().toString(36).slice(2, 10) + '_' + Date.now().toString(36);
 
@@ -3480,21 +3486,79 @@
       return code === 'PERMISSION_DENIED' || /permission_denied/i.test(msg);
     }
 
+    function safePhotoKey(itemId) {
+      return String(itemId || '').replace(/[.#$\[\]\/]/g, '_');
+    }
+
+    function syncSinglePhotoToFirebase(itemId, dataUrl) {
+      if (!itemId) return;
+      const key = safePhotoKey(itemId);
+      const isInlineData = typeof dataUrl === 'string' && /^data:image\//i.test(dataUrl);
+      if (isInlineData) {
+        remotePhotosMap[key] = dataUrl;
+      } else {
+        delete remotePhotosMap[key];
+      }
+      if (!fbPhotosRef || fbApplyingRemote) return;
+      const op = isInlineData
+        ? fbPhotosRef.child(key).set(dataUrl)
+        : fbPhotosRef.child(key).remove();
+      op.catch(err => {
+        if (!isFirebasePermissionError(err)) {
+          console.warn('雲端照片同步失敗:', err);
+        }
+      });
+    }
+
+    function hydrateShoppingPhotosFromMap(shoppingList, photosMap) {
+      if (!Array.isArray(shoppingList) || !photosMap || typeof photosMap !== 'object') return false;
+      let changed = false;
+      shoppingList.forEach(item => {
+        if (!item || !item.id) return;
+        const key = safePhotoKey(item.id);
+        const cloudPhoto = photosMap[key];
+        if (item.imgUrl === '__PHOTO_NODE__') {
+          const nextUrl = (typeof cloudPhoto === 'string' && /^data:image\//i.test(cloudPhoto)) ? cloudPhoto : '';
+          if (item.imgUrl !== nextUrl) {
+            item.imgUrl = nextUrl;
+            changed = true;
+          }
+        } else if (!item.imgUrl && typeof cloudPhoto === 'string' && /^data:image\//i.test(cloudPhoto)) {
+          item.imgUrl = cloudPhoto;
+          changed = true;
+        }
+      });
+      return changed;
+    }
+
     function pushStateToFirebase() {
       if (!fbDbRef) return;
       try {
+        // 圖片與文字拆開同步：主節點只傳文字與圖片佔位標記，大幅節省國外 4G 流量
+        const lightShopping = appState.shopping.map(item => {
+          if (item && typeof item.imgUrl === 'string' && /^data:image\//i.test(item.imgUrl)) {
+            const pKey = safePhotoKey(item.id);
+            if (fbPhotosRef && remotePhotosMap[pKey] !== item.imgUrl) {
+              syncSinglePhotoToFirebase(item.id, item.imgUrl);
+            }
+            return { ...item, imgUrl: '__PHOTO_NODE__' };
+          }
+          return item;
+        });
         const payload = {
           itinerary: appState.itinerary,
-          shopping: appState.shopping.length > 0 ? appState.shopping : '__EMPTY__',
+          shopping: lightShopping.length > 0 ? lightShopping : '__EMPTY__',
           notes: Object.keys(appState.notes || {}).length > 0 ? appState.notes : '__EMPTY__',
           migrations: appState.migrations || { addedGlassStudioLuca: true, addedProxyShopping2026: true },
           updatedBy: FB_CLIENT_ID,
           updatedAt: Date.now()
         };
-        fbDbRef.set(payload).catch(err => {
+        // 使用 update() 而非 set()，保留獨立的 /photos 圖片節點
+        fbDbRef.update(payload).catch(err => {
           if (isFirebasePermissionError(err)) {
             console.warn('Firebase 寫入權限不足（請至 Firebase Console 開啟讀寫規則），目前以本機儲存運作。');
             if (fbDbRef) { fbDbRef.off(); fbDbRef = null; }
+            if (fbPhotosRef) { fbPhotosRef.off(); fbPhotosRef = null; }
             setSyncStatus('error', '需開啟 Firebase 規則（目前本機儲存）');
             updateFirebasePermHelpUI(true);
           } else {
@@ -3527,6 +3591,10 @@
           fbDbRef.off();
           fbDbRef = null;
         }
+        if (fbPhotosRef) {
+          fbPhotosRef.off();
+          fbPhotosRef = null;
+        }
         // 使用完整 URL 雜湊避免不同 Firebase 網址因共同前綴 (https://) 發生實例碰撞
         let urlHash = 0;
         for (let i = 0; i < dbUrl.length; i++) {
@@ -3542,6 +3610,19 @@
 
         const db = fbAppInstance.database();
         fbDbRef = db.ref('trips/' + roomId);
+        fbPhotosRef = db.ref('trips/' + roomId + '/photos');
+
+        // 獨立監聽圖片節點：僅在有人上傳／更換／刪除照片時才同步圖片
+        fbPhotosRef.on('value', (snap) => {
+          const photosVal = snap.val();
+          remotePhotosMap = (photosVal && typeof photosVal === 'object') ? photosVal : {};
+          if (hydrateShoppingPhotosFromMap(appState.shopping, remotePhotosMap)) {
+            saveState(false);
+            if (appState.currentTab === 'shopping') {
+              rerenderActiveView();
+            }
+          }
+        }, () => {});
 
         setSyncStatus('cloud', '雲端連線中...');
         updateFirebasePermHelpUI(false);
@@ -3558,6 +3639,9 @@
               return;
             }
             fbApplyingRemote = true;
+            if (val.photos && typeof val.photos === 'object') {
+              remotePhotosMap = { ...remotePhotosMap, ...val.photos };
+            }
             const merged = normalizeLoadedState({
               ...appState,
               itinerary: val.itinerary || appState.itinerary,
@@ -3567,6 +3651,7 @@
             });
             const needSyncMigrated = !!merged._needsCloudSync;
             delete merged._needsCloudSync;
+            hydrateShoppingPhotosFromMap(merged.shopping, remotePhotosMap);
             appState.itinerary = merged.itinerary;
             appState.shopping = merged.shopping;
             appState.notes = merged.notes;
@@ -3593,6 +3678,10 @@
             if (fbDbRef) {
               fbDbRef.off();
               fbDbRef = null;
+            }
+            if (fbPhotosRef) {
+              fbPhotosRef.off();
+              fbPhotosRef = null;
             }
             setSyncStatus('error', '需開啟 Firebase 規則（點此查看）');
             updateFirebasePermHelpUI(true);
@@ -3661,6 +3750,10 @@
       if (fbDbRef) {
         fbDbRef.off();
         fbDbRef = null;
+      }
+      if (fbPhotosRef) {
+        fbPhotosRef.off();
+        fbPhotosRef = null;
       }
       appState.firebase.databaseURL = '';
       appState.firebase.manualDisconnect = true;
@@ -3767,6 +3860,8 @@
           appState.notes = {};
           appState.migrations = { addedGlassStudioLuca: true, addedProxyShopping2026: true };
           openEventEditors.clear();
+          remotePhotosMap = {};
+          if (fbPhotosRef) fbPhotosRef.remove().catch(() => {});
           saveState(true);
           rerenderActiveView();
           closeFirebaseModal();
@@ -5226,6 +5321,7 @@
         const item = list[targetIdx];
         if (!item) return;
         item.imgUrl = dataUrl;
+        syncSinglePhotoToFirebase(item.id, dataUrl);
         saveState(true);
         renderShoppingList();
         const modal = document.getElementById('shopImageModal');
@@ -5257,6 +5353,7 @@
       const item = list[idx];
       if (!item) return;
       item.imgUrl = '';
+      syncSinglePhotoToFirebase(item.id, '');
       saveState(true);
       renderShoppingList();
       if (shopImgModalCurrentIdx === idx) openShopImageModal(idx);
@@ -5463,6 +5560,7 @@
         return;
       }
       item.imgUrl = raw;
+      syncSinglePhotoToFirebase(item.id, raw);
       saveState(true);
       renderShoppingList();
       openShopImageModal(shopImgModalCurrentIdx);
@@ -5685,8 +5783,9 @@
       const qty = Math.max(1, parseInt(qtyEl?.value, 10) || 1);
 
       if (!Array.isArray(appState.shopping)) appState.shopping = [];
+      const newShopId = 's-' + Date.now();
       appState.shopping.unshift({
-        id: 's-' + Date.now(),
+        id: newShopId,
         name,
         price,
         qty,
@@ -5697,6 +5796,9 @@
         imgUrl,
         jpName: name
       });
+      if (imgUrl && /^data:image\//i.test(imgUrl)) {
+        syncSinglePhotoToFirebase(newShopId, imgUrl);
+      }
 
       if (nameEl) nameEl.value = '';
       if (noteEl) noteEl.value = '';
@@ -5750,10 +5852,14 @@
       if (!requireUnlocked(() => deleteShoppingItem(idx))) return;
       if (!appState.shopping || !appState.shopping[idx]) return;
       const removed = appState.shopping.splice(idx, 1)[0];
+      syncSinglePhotoToFirebase(removed.id, '');
       saveState(true);
       renderShoppingList();
       showToast(`已刪除「${removed.name.slice(0, 14)}」`, () => {
         appState.shopping.splice(Math.min(idx, appState.shopping.length), 0, removed);
+        if (removed.imgUrl && /^data:image\//i.test(removed.imgUrl)) {
+          syncSinglePhotoToFirebase(removed.id, removed.imgUrl);
+        }
         saveState(true);
         if (appState.currentTab === 'shopping') renderShoppingList();
         showToast('已復原剛才刪除的商品');
@@ -5767,6 +5873,8 @@
         '將會把採購清單恢復為預設的自買與代購商品清單，原本新增或勾選的項目會被清除。',
         () => {
           appState.shopping = deepClone(DEFAULT_SHOPPING);
+          remotePhotosMap = {};
+          if (fbPhotosRef) fbPhotosRef.remove().catch(() => {});
           saveState(true);
           renderShoppingList();
           showToast('已重置採購清單');
